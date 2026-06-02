@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>วิ่งตะลุยอวกาศ - Scratch Style Runner</title>
     <style>
         /* ==========================================================================
@@ -24,7 +24,14 @@
             --font-main: 'Nunito', 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            user-select: none; 
+            -webkit-user-select: none;
+            touch-action: manipulation; /* ป้องกัน Double tap zoom บนอุปกรณ์พกพา */
+        }
 
         body {
             font-family: var(--font-main);
@@ -35,91 +42,144 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            padding-bottom: 30px;
         }
 
         /* ==========================================================================
-           GAME CONTAINER & CANVAS
+           GAME CONTAINER & CANVAS (RESPONSIVE)
            ========================================================================== */
         #app-container {
-            width: 100%; max-width: 1200px; margin: 0 auto;
-            display: flex; flex-direction: column; align-items: center; padding: 10px;
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
         }
 
         #game-wrapper {
-            position: relative; width: 100%; max-width: 960px; aspect-ratio: 16/9;
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
             background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
-            border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            border: 4px solid white; margin-bottom: 20px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 4px solid white;
+            margin-bottom: 20px;
         }
 
-        canvas { display: block; width: 100%; height: 100%; image-rendering: optimizeQuality; }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: optimizeQuality;
+        }
 
         /* ==========================================================================
-           UI OVERLAYS
+           UI OVERLAYS & HUD
            ========================================================================== */
-        .hud-panel { position: absolute; top: 15px; display: flex; gap: 15px; z-index: 10; }
-        .hud-left { left: 20px; }
-        .hud-right { right: 20px; }
+        .hud-panel { position: absolute; top: 15px; display: flex; gap: 10px; z-index: 10; }
+        .hud-left { left: 15px; }
+        .hud-right { right: 15px; }
 
         .stat-box {
-            background: var(--bg-glass); backdrop-filter: blur(8px); border: 2px solid white;
-            padding: 8px 15px; border-radius: 15px; font-weight: 800; font-size: 1.1rem;
-            color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex; align-items: center; gap: 8px;
+            background: var(--bg-glass);
+            backdrop-filter: blur(8px);
+            border: 2px solid white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            color: var(--text-dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        .stat-icon { font-size: 1.3rem; }
+        .stat-icon { font-size: 1.1rem; }
 
         /* Hearts */
-        #lives-container { display: flex; gap: 5px; }
-        .heart { color: #ff4d4d; font-size: 1.5rem; animation: pulse 1.5s infinite; }
+        #lives-container { display: flex; gap: 3px; }
+        .heart { color: #ff4d4d; font-size: 1.3rem; animation: pulse 1.5s infinite; }
         .heart.lost { color: #ccc; animation: none; opacity: 0.5; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        /* LIVE CODE MONITOR */
+        /* LIVE CODE MONITOR (ย้ายขึ้นไปด้านบนซ้ายใต้กล่องคะแนนเพื่อไม่ให้บังจอ) */
         #live-code-panel {
-            position: absolute; top: 75px; left: 20px; /* ย้ายจาก bottom: 20px มาอยู่ด้านบนใต้กล่องคะแนน */
-            background: rgba(255, 255, 255, 0.95); border: 3px solid var(--scratch-blue);
-            border-radius: 15px; padding: 12px; z-index: 15; width: 280px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2); pointer-events: none;
-            transition: opacity 0.3s ease; opacity: 0;
+            position: absolute;
+            top: 65px;
+            left: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid var(--scratch-blue);
+            border-radius: 12px;
+            padding: 10px;
+            z-index: 15;
+            width: 240px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            opacity: 0;
         }
         #live-code-panel.active { opacity: 1; }
         .live-code-header {
-            font-size: 0.85rem; font-weight: bold; color: var(--scratch-orange);
-            margin-bottom: 12px; display: flex; justify-content: space-between;
-            align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 5px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: var(--scratch-orange);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 3px;
         }
         .blink-dot {
-            width: 8px; height: 8px; background-color: #4CAF50; border-radius: 50%;
-            display: inline-block; animation: blink 1s infinite;
+            width: 6px; height: 6px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1s infinite;
         }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
         
         .hl-anim { animation: flashCode 0.5s ease; }
         @keyframes flashCode {
             0% { transform: scale(1); filter: brightness(1); }
-            30% { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 15px var(--scratch-yellow); border-radius: 4px; }
+            30% { transform: scale(1.05); filter: brightness(1.15); box-shadow: 0 0 10px var(--scratch-yellow); }
             100% { transform: scale(1); filter: brightness(1); }
         }
 
-        /* Controls */
+        /* MOBILE FLOATING JUMP BUTTON (ปุ่มลอยสำหรับมือถือบริเวณขวาล่าง) */
         #mobile-controls {
-            position: absolute; bottom: 20px; left: 0; width: 100%;
-            display: none; justify-content: center; padding: 0 20px; z-index: 10;
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 15;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
-        .btn-jump {
-            background: linear-gradient(135deg, var(--scratch-orange), #ff6b00); color: white;
-            border: none; border-radius: 50px; padding: 15px 40px; font-size: 1.5rem; font-weight: bold;
-            box-shadow: 0 8px 0 #cc5500, 0 15px 20px rgba(0,0,0,0.2); cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s; touch-action: manipulation;
+        .btn-mobile-jump {
+            background: radial-gradient(circle, #ff9f1a 0%, #ff6b00 100%);
+            color: white;
+            border: 4px solid white;
+            border-radius: 50%;
+            width: 85px;
+            height: 85px;
+            font-size: 1.1rem;
+            font-weight: 900;
+            box-shadow: 0 8px 0 #cc5500, 0 10px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            transition: transform 0.05s, box-shadow 0.05s;
         }
-        .btn-jump:active { transform: translateY(8px); box-shadow: 0 0 0 #cc5500, 0 5px 10px rgba(0,0,0,0.2); }
-
-        @media (max-width: 768px) {
-            #mobile-controls { display: flex; }
-            .stat-box { font-size: 0.9rem; padding: 5px 10px; }
-            .heart { font-size: 1.2rem; }
-            #live-code-panel { bottom: auto; top: 60px; left: 10px; transform: scale(0.8); transform-origin: top left; }
+        .btn-mobile-jump:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #cc5500, 0 4px 8px rgba(0,0,0,0.3);
         }
 
         /* Menus */
@@ -132,32 +192,32 @@
         .menu-overlay.active { opacity: 1; pointer-events: all; }
 
         .menu-card {
-            background: white; padding: 40px; border-radius: 30px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 5px solid var(--scratch-blue);
-            max-width: 90%; width: 400px; transform: translateY(20px);
+            background: white; padding: 25px; border-radius: 25px; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); border: 4px solid var(--scratch-blue);
+            max-width: 90%; width: 380px; transform: translateY(20px);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .menu-overlay.active .menu-card { transform: translateY(0); }
 
-        .menu-title { font-size: 2.5rem; color: var(--scratch-orange); margin-bottom: 10px; font-weight: 900; text-shadow: 2px 2px 0px rgba(255, 140, 0, 0.2); }
+        .menu-title { font-size: 2.1rem; color: var(--scratch-orange); margin-bottom: 8px; font-weight: 900; text-shadow: 2px 2px 0px rgba(255, 140, 0, 0.15); }
 
         .menu-stats {
-            background: #f5f5f5; border-radius: 15px; padding: 15px; margin-bottom: 25px;
-            font-size: 1.2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+            background: #f5f5f5; border-radius: 12px; padding: 12px; margin-bottom: 20px;
+            font-size: 1rem; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
         }
-        .menu-stats div { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .menu-stats div { background: white; padding: 8px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .btn-primary, .btn-secondary {
             color: white; border: none; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.1s; width: 100%;
         }
-        .btn-primary { background: var(--scratch-blue); padding: 15px 30px; font-size: 1.3rem; box-shadow: 0 6px 0 #319bc2; }
-        .btn-primary:active { transform: translateY(6px); box-shadow: 0 0 0 #319bc2; }
-        .btn-secondary { background: var(--scratch-purple); padding: 10px 20px; font-size: 1rem; box-shadow: 0 4px 0 #7a4ddb; margin-top: 15px; }
+        .btn-primary { background: var(--scratch-blue); padding: 12px 24px; font-size: 1.15rem; box-shadow: 0 5px 0 #319bc2; }
+        .btn-primary:active { transform: translateY(5px); box-shadow: 0 0 0 #319bc2; }
+        .btn-secondary { background: var(--scratch-purple); padding: 8px 16px; font-size: 0.95rem; box-shadow: 0 4px 0 #7a4ddb; margin-top: 12px; }
         .btn-secondary:active { transform: translateY(4px); box-shadow: 0 0 0 #7a4ddb; }
 
         .quiz-btn {
-            background: #f0f8ff; color: var(--scratch-blue); border: 3px solid var(--scratch-blue);
-            font-weight: bold; padding: 12px 20px; font-size: 1.1rem; border-radius: 15px;
+            background: #f0f8ff; color: var(--scratch-blue); border: 2px solid var(--scratch-blue);
+            font-weight: bold; padding: 10px 15px; font-size: 1rem; border-radius: 12px;
             cursor: pointer; transition: all 0.2s; width: 100%; text-align: left;
         }
         .quiz-btn:hover { background: var(--scratch-blue); color: white; }
@@ -165,25 +225,25 @@
 
         /* AI Robot Teacher */
         #robot-teacher {
-            position: absolute; bottom: 80px; right: 30px; width: 80px; height: 80px; z-index: 15;
+            position: absolute; bottom: 20px; left: 20px; width: 65px; height: 65px; z-index: 15;
             transition: transform 0.3s; animation: floatRobot 3s ease-in-out infinite; display: none;
         }
         #robot-teacher.visible { display: block; }
-        @keyframes floatRobot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes floatRobot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
         .speech-bubble {
-            position: absolute; bottom: 90px; right: 40px; background: white;
-            border: 3px solid var(--scratch-blue); border-radius: 15px; padding: 10px 15px;
-            font-weight: bold; font-size: 1rem; color: var(--text-dark); white-space: nowrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); opacity: 0; transform: scale(0);
-            transform-origin: bottom right; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; bottom: 75px; left: 10px; background: white;
+            border: 3px solid var(--scratch-blue); border-radius: 12px; padding: 8px 12px;
+            font-weight: bold; font-size: 0.85rem; color: var(--text-dark); white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15); opacity: 0; transform: scale(0);
+            transform-origin: bottom left; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .speech-bubble::after {
-            content: ''; position: absolute; bottom: -10px; right: 20px;
+            content: ''; position: absolute; bottom: -10px; left: 20px;
             border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent;
         }
         .speech-bubble::before {
-            content: ''; position: absolute; bottom: -14px; right: 18px;
+            content: ''; position: absolute; bottom: -14px; left: 18px;
             border-width: 12px 12px 0; border-style: solid; border-color: var(--scratch-blue) transparent transparent transparent;
         }
         .speech-bubble.show { opacity: 1; transform: scale(1); }
@@ -191,12 +251,28 @@
         /* Achievement Popup */
         #achievement-popup {
             position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #ffdf00, #ffaa00); color: white; padding: 15px 30px;
-            border-radius: 50px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            border: 3px solid white; z-index: 30; display: flex; align-items: center; gap: 10px;
+            background: linear-gradient(135deg, #ffdf00, #ffaa00); color: white; padding: 12px 24px;
+            border-radius: 50px; font-weight: bold; font-size: 1.05rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 3px solid white; z-index: 30; display: flex; align-items: center; gap: 8px;
             transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #achievement-popup.show { top: 30px; }
+        #achievement-popup.show { top: 20px; }
+
+        /* Media Queries for responsive screen layouts */
+        @media (max-width: 768px) {
+            #live-code-panel {
+                transform: scale(0.7);
+                transform-origin: top left;
+                top: 55px;
+                left: 10px;
+                width: 220px;
+            }
+            .stat-box { font-size: 0.8rem; padding: 4px 8px; }
+            .heart { font-size: 1.1rem; }
+            .btn-mobile-jump { width: 70px; height: 70px; font-size: 0.95rem; }
+            #robot-teacher { width: 50px; height: 50px; bottom: 10px; left: 10px; }
+            .speech-bubble { bottom: 60px; left: 5px; font-size: 0.75rem; }
+        }
 
         /* ==========================================================================
            ADVANCED SCRATCH BLOCKS CSS (REALISTIC STYLE)
@@ -207,7 +283,6 @@
             overflow-x: auto; display: flex; flex-direction: column; align-items: flex-start;
         }
 
-        /* Variables for exact Scratch 3.0 colors */
         .sb-events { --sb-color: #FFBF00; }
         .sb-control { --sb-color: #FFAB19; }
         .sb-motion { --sb-color: #4C97FF; }
@@ -216,7 +291,6 @@
         .sb-var { --sb-color: #FF8C00; }
         .sb-op { --sb-color: #59C059; }
 
-        /* Base Block Style */
         .s-block {
             background-color: var(--sb-color); position: relative; border-radius: 4px;
             padding: 6px 12px; color: white; font-size: 0.85rem; font-weight: bold;
@@ -232,7 +306,6 @@
         .s-hat { border-radius: 15px 15px 4px 4px; padding-top: 15px; margin-top: 0; }
         .s-hat::before { display: none; }
 
-        /* C-Block (Loops & Ifs) Structure */
         .s-c-wrap { display: flex; flex-direction: column; align-items: flex-start; margin-top: -4px; z-index: 1; }
         .s-block.s-c-top { border-radius: 4px 4px 4px 0; z-index: 3; }
         .s-c-mid {
@@ -250,7 +323,6 @@
             border: 1px solid rgba(0,0,0,0.1); border-bottom: none;
         }
 
-        /* Input Fields inside blocks */
         .s-input {
             background: white; color: #333; padding: 1px 8px; border-radius: 12px;
             font-weight: normal; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); text-align: center; min-width: 30px;
@@ -261,7 +333,6 @@
         }
         .s-dropdown::after { content: '▼'; font-size: 0.6em; opacity: 0.8; }
         
-        /* Boolean / Condition Field (Hexagon) */
         .s-bool {
             display: inline-flex; align-items: center; padding: 2px 15px; background: #5CB1D6;
             color: white; font-weight: normal; gap: 6px;
@@ -330,7 +401,7 @@
             </div>
         </div>
 
-        <!-- Robot Teacher -->
+        <!-- Robot Teacher (ย้ายตำแหน่งมาด้านซ้ายเพื่อเลี่ยงปุ่มกดสัมผัส) -->
         <div id="robot-teacher">
             <svg viewBox="0 0 100 100" width="100%" height="100%">
                 <rect x="20" y="30" width="60" height="50" rx="10" fill="#e6e6e6" stroke="#4cbfe6" stroke-width="4"/>
@@ -359,9 +430,9 @@
         <!-- HTML5 Canvas -->
         <canvas id="gameCanvas" width="960" height="540"></canvas>
 
-        <!-- Mobile Controls -->
+        <!-- Mobile Floating Controls -->
         <div id="mobile-controls">
-            <button class="btn-jump" id="btn-mobile-jump">กระโดด (JUMP)</button>
+            <button class="btn-mobile-jump" id="btn-mobile-jump">กระโดด</button>
         </div>
 
         <!-- Main Menu -->
@@ -404,7 +475,7 @@
         <div class="menu-overlay" id="quiz-menu">
             <div class="menu-card" style="width: 500px; border-color: var(--scratch-purple);">
                 <h2 class="menu-title" style="font-size: 1.8rem; color: var(--scratch-purple);">❓ กล่องคำถามโบนัส!</h2>
-                <p id="quiz-question" style="font-size: 1.2rem; margin: 15px 0; font-weight: bold; color: var(--text-dark);">คำถาม?</p>
+                <p id="quiz-question" style="font-size: 1.1rem; margin: 15px 0; font-weight: bold; color: var(--text-dark);">คำถาม?</p>
                 <div id="quiz-choices" style="display: flex; flex-direction: column; gap: 10px;">
                     <!-- Choices injected here -->
                 </div>
@@ -423,10 +494,10 @@
         <div class="edu-card">
             <h2 class="edu-title">💡 สิ่งที่ได้เรียนรู้จากการเล่นเกมนี้</h2>
             <ul class="checklist">
-                <li><strong>Event (เหตุการณ์):</strong> การกดปุ่ม Spacebar สั่งให้เงื่อนไขกระโดดทำงาน</li>
-                <li><strong>Condition (เงื่อนไข If):</strong> ใช้ตรวจจับการชนสิ่งกีดขวาง (หิน) หรือการเก็บไอเทม (ดาว)</li>
-                <li><strong>Variable (ตัวแปร):</strong> การจัดการค่า "คะแนน" และ "พลังชีวิต" แบบ Real-time</li>
-                <li><strong>Loop (การวนซ้ำ):</strong> การใช้ Forever Loop สร้างแรงโน้มถ่วงและเลื่อนฉากอย่างต่อเนื่อง</li>
+                <li><strong>Event (เหตุการณ์):</strong> การสัมผัสหน้าจอมือถือ หรือการกดปุ่มสั่งกระโดด</li>
+                <li><strong>Condition (เงื่อนไข If):</strong> การหลบหลีกสิ่งกีดขวาง และตอบปัญหาในมินิเกมโบนัส</li>
+                <li><strong>Variable (ตัวแปร):</strong> ตัวเลขคะแนนและการหักลบพลังชีวิตในระหว่างวิ่ง</li>
+                <li><strong>Loop (การวนซ้ำ):</strong> การเคลื่อนที่เรนเดอร์ของท้องฟ้าและถนนเป็นลูปไม่สิ้นสุด</li>
             </ul>
         </div>
 
@@ -443,7 +514,7 @@
         <!-- FULL SCRATCH CODE SCRIPT -->
         <div class="edu-card full-width">
             <h2 class="edu-title">🧩 โครงสร้างอัลกอริทึมทั้งหมดของเกม (Scratch Code)</h2>
-            <p style="margin-bottom: 15px; color: #666;">นี่คือชุดคำสั่งที่อยู่เบื้องหลังการวิ่ง การกระโดด และการคิดคะแนนทั้งหมดในเกมนี้</p>
+            <p style="margin-bottom: 15px; color: #666;">นี่คือชุดคำสั่งภาษาบล็อก Scratch ที่ถอดแบบออกมาจากการเขียนชุดโปรแกรมของตัวเกมนี้</p>
             
             <div class="scratch-code-area">
                 
@@ -466,7 +537,7 @@
 
                         <!-- JUMP CONDITION -->
                         <div class="s-c-wrap sb-control">
-                            <div class="s-block s-c-top">ถ้า <div class="s-bool sb-sensing">ปุ่ม <div class="s-dropdown">space</div> ถูกกด?</div> แล้ว</div>
+                            <div class="s-block s-c-top">ถ้า <div class="s-bool sb-sensing">หน้าจอสัมผัส / แตะปุ่มถูกกระทำ?</div> แล้ว</div>
                             <div class="s-c-mid">
                                 <div class="s-block sb-motion">ตั้งค่า ความเร็วแกน Y เป็น <div class="s-input">15</div> (กระโดด)</div>
                                 <div class="s-block sb-sound">เล่นเสียง <div class="s-dropdown">Jump Effect</div> จนจบ</div>
@@ -523,7 +594,7 @@
 <script>
 /**
  * SCRATCH-STYLE EDUCATIONAL PLATFORM RUNNER
- * Fully Unified Version: Live Code + Bonus Quiz + Realistic Blocks + Accurate Collisions
+ * Fully Unified Version: Live Code + Bonus Quiz + Realistic Blocks + Accurate Collisions + Mobile Optimization
  */
 
 const CONFIG = {
@@ -582,7 +653,7 @@ const Utils = {
     random: (min, max) => Math.random() * (max - min) + min,
     randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
     checkCollision: (r1, r2) => {
-        const pX = 10, pY = 10;
+        const pX = 8, pY = 8;
         return (r1.x < r2.x + r2.w - pX && r1.x + r1.w - pX > r2.x &&
                 r1.y < r2.y + r2.h - pY && r1.y + r1.h - pY > r2.y);
     }
@@ -648,7 +719,7 @@ const LiveCode = {
         `,
         jump: `
             <div class="s-c-wrap sb-control">
-                <div class="s-block s-c-top hl-anim">ถ้า <div class="s-bool sb-sensing">กด Spacebar?</div></div>
+                <div class="s-block s-c-top hl-anim">ถ้า <div class="s-bool sb-sensing">กดสัมผัสหน้าจอ?</div></div>
                 <div class="s-c-mid">
                     <div class="s-block sb-motion hl-anim">กระโดด (เปลี่ยน Y 15)</div>
                     <div class="s-block sb-sound hl-anim">เล่นเสียงกระโดด</div>
@@ -862,11 +933,18 @@ class Game {
             audio.init();
             if (this.state === 'PLAYING') this.player.jump();
         };
+        
+        // คีย์บอร์ด
         window.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') jumpAction(e); });
+        
+        // รองรับระบบ Touch & Click บนตัว Canvas โดยตรง
         this.canvas.addEventListener('touchstart', jumpAction, {passive: false});
         this.canvas.addEventListener('mousedown', jumpAction);
-        document.getElementById('btn-mobile-jump').addEventListener('touchstart', jumpAction, {passive: false});
-        document.getElementById('btn-mobile-jump').addEventListener('mousedown', jumpAction);
+        
+        // ปุ่มลอยมือถือขวาล่าง
+        const mJumpBtn = document.getElementById('btn-mobile-jump');
+        mJumpBtn.addEventListener('touchstart', jumpAction, {passive: false});
+        mJumpBtn.addEventListener('mousedown', jumpAction);
     }
     start() {
         this.state = 'PLAYING'; this.score = 0; this.distance = 0; this.starsCollected = 0;
@@ -1077,7 +1155,7 @@ window.onload = () => {
     setInterval(() => {
         if (game.state === 'MENU') {
             document.getElementById('robot-teacher').classList.add('visible');
-            const tips = ["กด Spacebar เพื่อรันคำสั่งกระโดดนะ!", "การเล่นเกมคือการรันลูป (Loop)", "เก็บกล่อง ? เพื่อทดสอบความรู้นะ!"];
+            const tips = ["กดปุ่มกระโดดหรือแตะหน้าจอเพื่อเริ่มนะ!", "การเล่นเกมคือการรันลูป (Loop)", "เก็บกล่อง ? เพื่อทดสอบความรู้นะ!"];
             Robot.say(tips[Utils.randomInt(0, tips.length - 1)], 4000);
         }
     }, 8000);
