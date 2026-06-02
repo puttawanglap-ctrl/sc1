@@ -9,7 +9,6 @@
            CSS VARIABLES & GLOBAL STYLES
            ========================================================================== */
         :root {
-            /* Scratch Inspired Palette */
             --scratch-orange: #ff8c00;
             --scratch-blue: #4cbfe6;
             --scratch-purple: #9966ff;
@@ -17,23 +16,15 @@
             --scratch-green: #4c97ff;
             --scratch-light-blue: #e6f0ff;
             
-            /* UI Colors */
             --text-dark: #333333;
             --text-light: #ffffff;
             --bg-glass: rgba(255, 255, 255, 0.85);
             --border-glass: rgba(255, 255, 255, 0.4);
-            --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             
-            /* Typography */
             --font-main: 'Nunito', 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none; /* Prevent text selection during gameplay */
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
             font-family: var(--font-main);
@@ -50,176 +41,111 @@
            GAME CONTAINER & CANVAS
            ========================================================================== */
         #app-container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
+            width: 100%; max-width: 1200px; margin: 0 auto;
+            display: flex; flex-direction: column; align-items: center; padding: 10px;
         }
 
         #game-wrapper {
-            position: relative;
-            width: 100%;
-            max-width: 960px;
-            aspect-ratio: 16/9;
+            position: relative; width: 100%; max-width: 960px; aspect-ratio: 16/9;
             background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            border: 4px solid white;
-            margin-bottom: 20px;
+            border-radius: 20px; overflow: hidden; box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 4px solid white; margin-bottom: 20px;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            image-rendering: optimizeQuality;
-        }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: optimizeQuality; }
 
         /* ==========================================================================
            UI OVERLAYS
            ========================================================================== */
-        .hud-panel {
-            position: absolute;
-            top: 15px;
-            display: flex;
-            gap: 15px;
-            z-index: 10;
-        }
-
+        .hud-panel { position: absolute; top: 15px; display: flex; gap: 15px; z-index: 10; }
         .hud-left { left: 20px; }
         .hud-right { right: 20px; }
 
         .stat-box {
-            background: var(--bg-glass);
-            backdrop-filter: blur(8px);
-            border: 2px solid white;
-            padding: 8px 15px;
-            border-radius: 15px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: var(--text-dark);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: var(--bg-glass); backdrop-filter: blur(8px); border: 2px solid white;
+            padding: 8px 15px; border-radius: 15px; font-weight: 800; font-size: 1.1rem;
+            color: var(--text-dark); box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; gap: 8px;
         }
-
         .stat-icon { font-size: 1.3rem; }
 
         /* Hearts */
         #lives-container { display: flex; gap: 5px; }
-        .heart {
-            color: #ff4d4d;
-            font-size: 1.5rem;
-            animation: pulse 1.5s infinite;
-        }
+        .heart { color: #ff4d4d; font-size: 1.5rem; animation: pulse 1.5s infinite; }
         .heart.lost { color: #ccc; animation: none; opacity: 0.5; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        /* LIVE CODE MONITOR */
+        #live-code-panel {
+            position: absolute; top: 75px; left: 20px; /* ย้ายจาก bottom: 20px มาอยู่ด้านบนใต้กล่องคะแนน */
+            background: rgba(255, 255, 255, 0.95); border: 3px solid var(--scratch-blue);
+            border-radius: 15px; padding: 12px; z-index: 15; width: 280px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); pointer-events: none;
+            transition: opacity 0.3s ease; opacity: 0;
+        }
+        #live-code-panel.active { opacity: 1; }
+        .live-code-header {
+            font-size: 0.85rem; font-weight: bold; color: var(--scratch-orange);
+            margin-bottom: 12px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 2px dashed #eee; padding-bottom: 5px;
+        }
+        .blink-dot {
+            width: 8px; height: 8px; background-color: #4CAF50; border-radius: 50%;
+            display: inline-block; animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .hl-anim { animation: flashCode 0.5s ease; }
+        @keyframes flashCode {
+            0% { transform: scale(1); filter: brightness(1); }
+            30% { transform: scale(1.05); filter: brightness(1.2); box-shadow: 0 0 15px var(--scratch-yellow); border-radius: 4px; }
+            100% { transform: scale(1); filter: brightness(1); }
         }
 
         /* Controls */
         #mobile-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            display: none;
-            justify-content: center;
-            padding: 0 20px;
-            z-index: 10;
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            display: none; justify-content: center; padding: 0 20px; z-index: 10;
         }
-
         .btn-jump {
-            background: linear-gradient(135deg, var(--scratch-orange), #ff6b00);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 15px 40px;
-            font-size: 1.5rem;
-            font-weight: bold;
-            box-shadow: 0 8px 0 #cc5500, 0 15px 20px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.1s;
-            touch-action: manipulation;
+            background: linear-gradient(135deg, var(--scratch-orange), #ff6b00); color: white;
+            border: none; border-radius: 50px; padding: 15px 40px; font-size: 1.5rem; font-weight: bold;
+            box-shadow: 0 8px 0 #cc5500, 0 15px 20px rgba(0,0,0,0.2); cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s; touch-action: manipulation;
         }
-
-        .btn-jump:active {
-            transform: translateY(8px);
-            box-shadow: 0 0 0 #cc5500, 0 5px 10px rgba(0,0,0,0.2);
-        }
+        .btn-jump:active { transform: translateY(8px); box-shadow: 0 0 0 #cc5500, 0 5px 10px rgba(0,0,0,0.2); }
 
         @media (max-width: 768px) {
             #mobile-controls { display: flex; }
             .stat-box { font-size: 0.9rem; padding: 5px 10px; }
             .heart { font-size: 1.2rem; }
+            #live-code-panel { bottom: auto; top: 60px; left: 10px; transform: scale(0.8); transform-origin: top left; }
         }
 
         /* Menus */
         .menu-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; opacity: 0; pointer-events: none; transition: opacity 0.3s;
         }
-
         .menu-overlay.active { opacity: 1; pointer-events: all; }
 
         .menu-card {
-            background: white;
-            padding: 40px;
-            border-radius: 30px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            border: 5px solid var(--scratch-blue);
-            max-width: 90%;
-            width: 400px;
-            transform: translateY(20px);
+            background: white; padding: 40px; border-radius: 30px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 5px solid var(--scratch-blue);
+            max-width: 90%; width: 400px; transform: translateY(20px);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         .menu-overlay.active .menu-card { transform: translateY(0); }
 
-        .menu-title {
-            font-size: 2.5rem;
-            color: var(--scratch-orange);
-            margin-bottom: 10px;
-            font-weight: 900;
-            text-shadow: 2px 2px 0px rgba(255, 140, 0, 0.2);
-        }
+        .menu-title { font-size: 2.5rem; color: var(--scratch-orange); margin-bottom: 10px; font-weight: 900; text-shadow: 2px 2px 0px rgba(255, 140, 0, 0.2); }
 
         .menu-stats {
-            background: #f5f5f5;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 25px;
-            font-size: 1.2rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            background: #f5f5f5; border-radius: 15px; padding: 15px; margin-bottom: 25px;
+            font-size: 1.2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
         }
-        
-        .menu-stats div {
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .menu-stats div { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
         .btn-primary, .btn-secondary {
             color: white; border: none; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.1s; width: 100%;
@@ -230,9 +156,8 @@
         .btn-secondary:active { transform: translateY(4px); box-shadow: 0 0 0 #7a4ddb; }
 
         .quiz-btn {
-            background: #f0f8ff; color: var(--scratch-blue);
-            border: 3px solid var(--scratch-blue); font-weight: bold;
-            padding: 12px 20px; font-size: 1.1rem; border-radius: 15px;
+            background: #f0f8ff; color: var(--scratch-blue); border: 3px solid var(--scratch-blue);
+            font-weight: bold; padding: 12px 20px; font-size: 1.1rem; border-radius: 15px;
             cursor: pointer; transition: all 0.2s; width: 100%; text-align: left;
         }
         .quiz-btn:hover { background: var(--scratch-blue); color: white; }
@@ -240,43 +165,19 @@
 
         /* AI Robot Teacher */
         #robot-teacher {
-            position: absolute;
-            bottom: 80px;
-            right: 30px;
-            width: 80px;
-            height: 80px;
-            z-index: 15;
-            transition: transform 0.3s;
-            animation: floatRobot 3s ease-in-out infinite;
-            display: none;
+            position: absolute; bottom: 80px; right: 30px; width: 80px; height: 80px; z-index: 15;
+            transition: transform 0.3s; animation: floatRobot 3s ease-in-out infinite; display: none;
         }
-
         #robot-teacher.visible { display: block; }
-
-        @keyframes floatRobot {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-15px); }
-        }
+        @keyframes floatRobot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
 
         .speech-bubble {
-            position: absolute;
-            bottom: 90px;
-            right: 40px;
-            background: white;
-            border: 3px solid var(--scratch-blue);
-            border-radius: 15px;
-            padding: 10px 15px;
-            font-weight: bold;
-            font-size: 1rem;
-            color: var(--text-dark);
-            white-space: nowrap;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            opacity: 0;
-            transform: scale(0);
-            transform-origin: bottom right;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: absolute; bottom: 90px; right: 40px; background: white;
+            border: 3px solid var(--scratch-blue); border-radius: 15px; padding: 10px 15px;
+            font-weight: bold; font-size: 1rem; color: var(--text-dark); white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); opacity: 0; transform: scale(0);
+            transform-origin: bottom right; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
         .speech-bubble::after {
             content: ''; position: absolute; bottom: -10px; right: 20px;
             border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent;
@@ -289,58 +190,94 @@
 
         /* Achievement Popup */
         #achievement-popup {
-            position: absolute;
-            top: -100px; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(135deg, #ffdf00, #ffaa00);
-            color: white; padding: 15px 30px; border-radius: 50px;
-            font-weight: bold; font-size: 1.2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            border: 3px solid white; z-index: 30;
-            display: flex; align-items: center; gap: 10px;
+            position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffdf00, #ffaa00); color: white; padding: 15px 30px;
+            border-radius: 50px; font-weight: bold; font-size: 1.2rem; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 3px solid white; z-index: 30; display: flex; align-items: center; gap: 10px;
             transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         #achievement-popup.show { top: 30px; }
 
         /* ==========================================================================
-           SCRATCH BLOCKS CSS (Used in Edu Section)
+           ADVANCED SCRATCH BLOCKS CSS (REALISTIC STYLE)
            ========================================================================== */
         .scratch-code-area {
-            background: #f9f9f9; padding: 20px; border-radius: 15px;
-            border: 2px dashed #ccc; font-family: 'Segoe UI', sans-serif;
-            font-weight: 600; font-size: 0.9rem;
+            background: #e9eef2; padding: 30px 20px; border-radius: 15px;
+            border: 2px solid #ced5dc; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            overflow-x: auto; display: flex; flex-direction: column; align-items: flex-start;
         }
 
-        .sb {
-            padding: 6px 12px; border-radius: 4px; color: white; margin-bottom: 4px;
-            display: inline-block; box-shadow: inset -2px -2px rgba(0,0,0,0.15); position: relative;
+        /* Variables for exact Scratch 3.0 colors */
+        .sb-events { --sb-color: #FFBF00; }
+        .sb-control { --sb-color: #FFAB19; }
+        .sb-motion { --sb-color: #4C97FF; }
+        .sb-sensing { --sb-color: #5CB1D6; }
+        .sb-sound { --sb-color: #CF63CF; }
+        .sb-var { --sb-color: #FF8C00; }
+        .sb-op { --sb-color: #59C059; }
+
+        /* Base Block Style */
+        .s-block {
+            background-color: var(--sb-color); position: relative; border-radius: 4px;
+            padding: 6px 12px; color: white; font-size: 0.85rem; font-weight: bold;
+            display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: inset 0 -2px rgba(0,0,0,0.15), 0 2px 3px rgba(0,0,0,0.1);
+            margin-top: -4px; z-index: 2; border: 1px solid rgba(0,0,0,0.1); border-top: none; white-space: nowrap;
         }
-        .sb-hat { background-color: #ffbf00; border-radius: 12px 12px 4px 4px; margin-bottom: 4px; }
-        .sb-hat::before {
-            content: ''; position: absolute; top: -6px; left: 15px;
-            width: 30px; height: 10px; background-color: #ffbf00; border-radius: 10px 10px 0 0;
+        .s-block::before {
+            content: ''; position: absolute; top: -4px; left: 15px; width: 15px; height: 4px;
+            background-color: var(--sb-color); border-radius: 3px 3px 0 0;
+            border: 1px solid rgba(0,0,0,0.1); border-bottom: none;
         }
-        .sb-control { background-color: #ffab19; }
-        .sb-motion { background-color: #4c97ff; }
-        .sb-sensing { background-color: #5cb1d6; }
-        .sb-sound { background-color: #cf63cf; }
-        .sb-data { background-color: #ff8c00; }
+        .s-hat { border-radius: 15px 15px 4px 4px; padding-top: 15px; margin-top: 0; }
+        .s-hat::before { display: none; }
+
+        /* C-Block (Loops & Ifs) Structure */
+        .s-c-wrap { display: flex; flex-direction: column; align-items: flex-start; margin-top: -4px; z-index: 1; }
+        .s-block.s-c-top { border-radius: 4px 4px 4px 0; z-index: 3; }
+        .s-c-mid {
+            border-left: 15px solid var(--sb-color); padding-left: 8px; padding-bottom: 4px; padding-top: 4px;
+            display: flex; flex-direction: column; align-items: flex-start; margin-top: -4px; z-index: 1;
+        }
+        .s-c-bot {
+            background-color: var(--sb-color); position: relative; height: 20px; min-width: 120px;
+            border-radius: 0 0 4px 4px; box-shadow: inset 0 -2px rgba(0,0,0,0.15), 0 2px 3px rgba(0,0,0,0.1);
+            margin-top: -4px; z-index: 2; border: 1px solid rgba(0,0,0,0.1); border-top: none;
+        }
+        .s-c-bot::before {
+            content: ''; position: absolute; top: -4px; left: 15px; width: 15px; height: 4px;
+            background-color: var(--sb-color); border-radius: 3px 3px 0 0;
+            border: 1px solid rgba(0,0,0,0.1); border-bottom: none;
+        }
+
+        /* Input Fields inside blocks */
+        .s-input {
+            background: white; color: #333; padding: 1px 8px; border-radius: 12px;
+            font-weight: normal; box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); text-align: center; min-width: 30px;
+        }
+        .s-dropdown {
+            background: rgba(0,0,0,0.2); color: white; padding: 2px 8px; border-radius: 12px;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .s-dropdown::after { content: '▼'; font-size: 0.6em; opacity: 0.8; }
         
-        .sb-wrap {
-            border-left: 15px solid #ffab19; padding-left: 10px; margin-bottom: 4px; border-radius: 0 0 0 4px;
+        /* Boolean / Condition Field (Hexagon) */
+        .s-bool {
+            display: inline-flex; align-items: center; padding: 2px 15px; background: #5CB1D6;
+            color: white; font-weight: normal; gap: 6px;
+            clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
         }
-        .sb-arg {
-            background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 10px;
-        }
+        .s-bool.op { background: #59C059; }
 
-        /* Educational Section */
-        #educational-section {
-            width: 100%; max-width: 960px; margin-top: 20px;
-            display: grid; grid-template-columns: 1fr; gap: 20px;
-        }
+        /* Educational Section Panel Layout */
+        #educational-section { width: 100%; max-width: 960px; margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
         @media (min-width: 768px) { #educational-section { grid-template-columns: 1fr 1fr; } }
+        .edu-card.full-width { grid-column: 1 / -1; }
+
         .edu-card {
-            background: white; border-radius: 20px; padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-top: 6px solid var(--scratch-blue);
+            background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-top: 6px solid var(--scratch-blue);
         }
         .edu-card:nth-child(2) { border-top-color: var(--scratch-orange); }
         .edu-card:nth-child(3) { border-top-color: var(--scratch-purple); }
@@ -354,7 +291,6 @@
         .stats-table { width: 100%; border-collapse: collapse; }
         .stats-table td { padding: 10px; border-bottom: 1px solid #eee; }
         .stats-table td:last-child { font-weight: bold; text-align: right; color: var(--scratch-orange); }
-
     </style>
 </head>
 <body>
@@ -380,6 +316,17 @@
                 <span class="heart">❤️</span>
                 <span class="heart">❤️</span>
                 <span class="heart">❤️</span>
+            </div>
+        </div>
+
+        <!-- LIVE CODE MONITOR -->
+        <div id="live-code-panel">
+            <div class="live-code-header">
+                <span>💻 โค้ดที่กำลังทำงาน</span>
+                <span title="กำลังทำงาน"><span class="blink-dot"></span> Live</span>
+            </div>
+            <div id="live-code-content" style="transform: scale(0.85); transform-origin: top left; width: 115%;">
+                <!-- Code blocks updated by JS -->
             </div>
         </div>
 
@@ -476,26 +423,11 @@
         <div class="edu-card">
             <h2 class="edu-title">💡 สิ่งที่ได้เรียนรู้จากการเล่นเกมนี้</h2>
             <ul class="checklist">
-                <li><strong>Event (เหตุการณ์):</strong> การกดปุ่ม Spacebar สั่งให้โค้ดทำงาน</li>
-                <li><strong>Condition (เงื่อนไข If):</strong> ตรวจสอบการชนสิ่งกีดขวาง หรือแตะโดนดาว</li>
-                <li><strong>Variable (ตัวแปร):</strong> การเก็บค่าคะแนน และพลังชีวิต (ลดลงเมื่อชนหิน)</li>
-                <li><strong>Loop (การวนซ้ำ):</strong> ฉากและตัวละครวิ่งต่อเนื่องด้วยลูป Forever</li>
+                <li><strong>Event (เหตุการณ์):</strong> การกดปุ่ม Spacebar สั่งให้เงื่อนไขกระโดดทำงาน</li>
+                <li><strong>Condition (เงื่อนไข If):</strong> ใช้ตรวจจับการชนสิ่งกีดขวาง (หิน) หรือการเก็บไอเทม (ดาว)</li>
+                <li><strong>Variable (ตัวแปร):</strong> การจัดการค่า "คะแนน" และ "พลังชีวิต" แบบ Real-time</li>
+                <li><strong>Loop (การวนซ้ำ):</strong> การใช้ Forever Loop สร้างแรงโน้มถ่วงและเลื่อนฉากอย่างต่อเนื่อง</li>
             </ul>
-        </div>
-
-        <div class="edu-card">
-            <h2 class="edu-title">🧩 ตัวอย่างโครงสร้างโค้ดเกม (Scratch)</h2>
-            <div class="scratch-code-area">
-                <div class="sb sb-hat">เมื่อคลิก 🚩</div>
-                <div class="sb sb-control">วนซ้ำตลอด (Forever)</div>
-                <div class="sb-wrap">
-                    <div class="sb sb-motion">เคลื่อนที่ฉากหลัง ⬅️</div>
-                    <div class="sb sb-control">ถ้า <span class="sb-arg">ชนหิน</span> แล้ว</div>
-                    <div class="sb-wrap" style="border-left-color: #5cb1d6;">
-                        <div class="sb sb-data" style="background:#ff4d4d">เปลี่ยน <span class="sb-arg">พลังชีวิต</span> ทีละ -1</div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="edu-card">
@@ -508,8 +440,79 @@
             </table>
         </div>
 
-        <div class="edu-card">
-            <h2 class="edu-title">🏆 ถ้วยรางวัล (Achievements)</h2>
+        <!-- FULL SCRATCH CODE SCRIPT -->
+        <div class="edu-card full-width">
+            <h2 class="edu-title">🧩 โครงสร้างอัลกอริทึมทั้งหมดของเกม (Scratch Code)</h2>
+            <p style="margin-bottom: 15px; color: #666;">นี่คือชุดคำสั่งที่อยู่เบื้องหลังการวิ่ง การกระโดด และการคิดคะแนนทั้งหมดในเกมนี้</p>
+            
+            <div class="scratch-code-area">
+                
+                <!-- When Green Flag Clicked -->
+                <div class="s-block s-hat sb-events">เมื่อคลิก 🚩</div>
+                
+                <!-- Init Variables -->
+                <div class="s-block sb-var">ตั้งค่า <div class="s-dropdown">คะแนน</div> เป็น <div class="s-input">0</div></div>
+                <div class="s-block sb-var">ตั้งค่า <div class="s-dropdown">พลังชีวิต</div> เป็น <div class="s-input">3</div></div>
+                <div class="s-block sb-var">ตั้งค่า <div class="s-dropdown">ความเร็วฉาก</div> เป็น <div class="s-input">6</div></div>
+
+                <!-- Main Game Loop (Forever) -->
+                <div class="s-c-wrap sb-control">
+                    <div class="s-block s-c-top">วนซ้ำตลอด (Forever)</div>
+                    <div class="s-c-mid">
+                        
+                        <!-- Move Background -->
+                        <div class="s-block sb-motion">เปลี่ยนตำแหน่งฉากและสิ่งกีดขวางทีละ <div class="s-input">-6</div></div>
+                        <div class="s-block sb-motion">คำนวณแรงโน้มถ่วงตัวละคร (Gravity)</div>
+
+                        <!-- JUMP CONDITION -->
+                        <div class="s-c-wrap sb-control">
+                            <div class="s-block s-c-top">ถ้า <div class="s-bool sb-sensing">ปุ่ม <div class="s-dropdown">space</div> ถูกกด?</div> แล้ว</div>
+                            <div class="s-c-mid">
+                                <div class="s-block sb-motion">ตั้งค่า ความเร็วแกน Y เป็น <div class="s-input">15</div> (กระโดด)</div>
+                                <div class="s-block sb-sound">เล่นเสียง <div class="s-dropdown">Jump Effect</div> จนจบ</div>
+                            </div>
+                            <div class="s-c-bot"></div>
+                        </div>
+
+                        <!-- HIT OBSTACLE CONDITION -->
+                        <div class="s-c-wrap sb-control">
+                            <div class="s-block s-c-top">ถ้า <div class="s-bool sb-sensing">แตะโดน <div class="s-dropdown">หิน หรือ กล่อง</div> ?</div> แล้ว</div>
+                            <div class="s-c-mid">
+                                <div class="s-block sb-var">เปลี่ยน <div class="s-dropdown">พลังชีวิต</div> ทีละ <div class="s-input">-1</div></div>
+                                <div class="s-block sb-sound">เริ่มเล่นเสียง <div class="s-dropdown">Hit Damage</div></div>
+                                
+                                <!-- GAME OVER CHECK -->
+                                <div class="s-c-wrap sb-control">
+                                    <div class="s-block s-c-top">ถ้า <div class="s-bool op"><div class="s-dropdown" style="background:#FF8C00">พลังชีวิต</div> &lt; <div class="s-input">1</div></div> แล้ว</div>
+                                    <div class="s-c-mid">
+                                        <div class="s-block sb-sound">เริ่มเล่นเสียง <div class="s-dropdown">Game Over</div></div>
+                                        <div class="s-block sb-control">หยุด <div class="s-dropdown">ทั้งหมด</div></div>
+                                    </div>
+                                    <div class="s-c-bot"></div>
+                                </div>
+                            </div>
+                            <div class="s-c-bot"></div>
+                        </div>
+
+                        <!-- COLLECT STAR CONDITION -->
+                        <div class="s-c-wrap sb-control">
+                            <div class="s-block s-c-top">ถ้า <div class="s-bool sb-sensing">แตะโดน <div class="s-dropdown">ดาวอวกาศ</div> ?</div> แล้ว</div>
+                            <div class="s-c-mid">
+                                <div class="s-block sb-var">เปลี่ยน <div class="s-dropdown">คะแนน</div> ทีละ <div class="s-input">10</div></div>
+                                <div class="s-block sb-sound">เริ่มเล่นเสียง <div class="s-dropdown">Coin Sparkle</div></div>
+                            </div>
+                            <div class="s-c-bot"></div>
+                        </div>
+
+                    </div>
+                    <div class="s-c-bot"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="edu-card full-width">
+            <h2 class="edu-title">🏆 ถ้วยรางวัลแห่งความพยายาม (Achievements)</h2>
             <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;" id="achievement-list"></div>
         </div>
 
@@ -520,7 +523,7 @@
 <script>
 /**
  * SCRATCH-STYLE EDUCATIONAL PLATFORM RUNNER
- * Fix: Standardized `.w` and `.h` on collision helper to ensure correct detection
+ * Fully Unified Version: Live Code + Bonus Quiz + Realistic Blocks + Accurate Collisions
  */
 
 const CONFIG = {
@@ -580,7 +583,6 @@ const Utils = {
     randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
     checkCollision: (r1, r2) => {
         const pX = 10, pY = 10;
-        // FIXED: Using .w and .h instead of .width and .height to match class declarations
         return (r1.x < r2.x + r2.w - pX && r1.x + r1.w - pX > r2.x &&
                 r1.y < r2.y + r2.h - pY && r1.y + r1.h - pY > r2.y);
     }
@@ -626,6 +628,69 @@ class SaveData {
     reset() { localStorage.removeItem(this.key); this.data = this.load(); this.save(); }
 }
 const storage = new SaveData();
+
+// --- LIVE CODE MONITOR ---
+const LiveCode = {
+    panel: document.getElementById('live-code-content'),
+    container: document.getElementById('live-code-panel'),
+    timer: null,
+    templates: {
+        loop: `
+            <div class="s-block s-hat sb-events">เมื่อคลิก 🚩</div>
+            <div class="s-c-wrap sb-control" style="margin-top: 2px;">
+                <div class="s-block s-c-top">วนซ้ำตลอด (Forever)</div>
+                <div class="s-c-mid">
+                    <div class="s-block sb-motion">เลื่อนฉากและสิ่งกีดขวาง ⬅️</div>
+                    <div class="s-block sb-motion" style="opacity:0.6;">รอตรวจสอบเงื่อนไข...</div>
+                </div>
+                <div class="s-c-bot"></div>
+            </div>
+        `,
+        jump: `
+            <div class="s-c-wrap sb-control">
+                <div class="s-block s-c-top hl-anim">ถ้า <div class="s-bool sb-sensing">กด Spacebar?</div></div>
+                <div class="s-c-mid">
+                    <div class="s-block sb-motion hl-anim">กระโดด (เปลี่ยน Y 15)</div>
+                    <div class="s-block sb-sound hl-anim">เล่นเสียงกระโดด</div>
+                </div>
+                <div class="s-c-bot"></div>
+            </div>
+        `,
+        collect: `
+            <div class="s-c-wrap sb-control">
+                <div class="s-block s-c-top hl-anim">ถ้า <div class="s-bool sb-sensing">แตะโดนดาว?</div></div>
+                <div class="s-c-mid">
+                    <div class="s-block sb-var hl-anim">เปลี่ยนคะแนน ทีละ 10</div>
+                </div>
+                <div class="s-c-bot"></div>
+            </div>
+        `,
+        hit: `
+            <div class="s-c-wrap sb-control">
+                <div class="s-block s-c-top hl-anim" style="background:#ff4d4d">ถ้า <div class="s-bool sb-sensing" style="background:#cc0000">ชนหินหรือกล่อง?</div></div>
+                <div class="s-c-mid" style="border-left-color:#ff4d4d">
+                    <div class="s-block sb-var hl-anim" style="background:#cc0000">เปลี่ยนหัวใจ ทีละ -1</div>
+                </div>
+                <div class="s-c-bot" style="background:#ff4d4d"></div>
+            </div>
+        `
+    },
+    show: function(type, robotMsg) {
+        if(game && game.state !== 'PLAYING') return;
+        this.panel.innerHTML = this.templates[type];
+        if(robotMsg) Robot.say(robotMsg, 2500);
+
+        if(this.timer) clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+            if(game && game.state === 'PLAYING') this.panel.innerHTML = this.templates.loop;
+        }, 1500);
+    },
+    reset: function() {
+        this.panel.innerHTML = this.templates.loop;
+        this.container.classList.add('active');
+    },
+    hide: function() { this.container.classList.remove('active'); }
+};
 
 // --- GAME ENTITIES ---
 class Background {
@@ -681,6 +746,8 @@ class Player {
         if (!this.isJumping) {
             this.vy = CONFIG.jumpForce; this.isJumping = true;
             audio.playJump(); game.spawnParticles(this.x + this.w/2, this.y + this.h, '#ccc', 10);
+            
+            LiveCode.show('jump', "คำสั่ง Event ทำงาน! ตรวจพบการกดปุ่ม");
         }
     }
     update() {
@@ -805,15 +872,15 @@ class Game {
         this.state = 'PLAYING'; this.score = 0; this.distance = 0; this.starsCollected = 0;
         this.lives = 3; this.level = 1; this.speed = CONFIG.baseSpeed;
         this.player = new Player(this.height); this.obstacles = []; this.items = []; this.particles = []; this.spawnTimer = 0;
-        UI.updateHUD(); UI.hideMenus();
-        Robot.say("ลุยเลย! ระวังสิ่งกีดขวางนะ", 4000);
+        UI.updateHUD(); UI.hideMenus(); LiveCode.reset();
+        Robot.say("ลุยเลย! ดูโค้ดทำงานสดๆ ที่มุมซ้ายนะ", 4000);
         storage.data.gamesPlayed++; storage.save(); storage.checkAchievements();
         if (this.animationId) cancelAnimationFrame(this.animationId);
         this.lastTime = performance.now(); this.loop(this.lastTime);
     }
     gameOver() {
         this.state = 'GAMEOVER'; audio.playGameOver();
-        Robot.say("ไม่เป็นไร! ลองพยายามดูใหม่นะ");
+        Robot.say("ไม่เป็นไร! ลองพยายามดูใหม่นะ"); LiveCode.hide();
         if (this.score > storage.data.highScore) storage.data.highScore = Math.floor(this.score);
         if (this.distance > storage.data.maxDistance) storage.data.maxDistance = this.distance;
         if (this.level > storage.data.maxLevel) storage.data.maxLevel = this.level;
@@ -822,7 +889,7 @@ class Game {
         UI.showGameOver(Math.floor(this.score), storage.data.highScore, Math.floor(this.distance), this.starsCollected);
     }
     startQuiz() {
-        this.state = 'QUIZ';
+        this.state = 'QUIZ'; LiveCode.hide();
         const q = QUIZ_QUESTIONS[Utils.randomInt(0, QUIZ_QUESTIONS.length - 1)];
         UI.showQuiz(q, (isCorrect) => {
             if (isCorrect) {
@@ -840,7 +907,7 @@ class Game {
     resumeGame() {
         this.state = 'COUNTDOWN';
         UI.showCountdown(() => {
-            this.state = 'PLAYING';
+            this.state = 'PLAYING'; LiveCode.reset();
             this.lastTime = performance.now();
             this.loop(this.lastTime);
         });
@@ -869,9 +936,12 @@ class Game {
             if (Utils.checkCollision(this.player, obs)) {
                 if (this.player.hit()) {
                     this.lives--; UI.updateLives(this.lives);
+                    
+                    LiveCode.show('hit', "เงื่อนไขเป็นจริง! เปลี่ยนหัวใจ -1");
+                    
                     if (this.lives <= 0) { this.gameOver(); return; }
                 }
-            } else if (!obs.passed && obs.x + obs.w < this.player.x) { // FIXED: Changed obs.width to obs.w
+            } else if (!obs.passed && obs.x + obs.w < this.player.x) {
                 obs.passed = true; this.score += 5;
             }
         }
@@ -882,6 +952,8 @@ class Game {
                 if (item.type === 'star') {
                     audio.playCoin(); this.spawnParticles(item.x + 15, item.y + 15, CONFIG.colors.star, 10);
                     this.score += CONFIG.pointsPerStar; this.starsCollected++; this.items.splice(i, 1);
+                    
+                    LiveCode.show('collect', "เก็บดาวได้! บวกตัวแปรคะแนน");
 
                     if (this.starsCollected % 5 === 0) Robot.say(["เยี่ยมยอด!", "ทำได้ดีมาก!", "คะแนนพุ่งเลย!"][Utils.randomInt(0,2)]);
                 } else if (item.type === 'bonus') {
@@ -1005,7 +1077,7 @@ window.onload = () => {
     setInterval(() => {
         if (game.state === 'MENU') {
             document.getElementById('robot-teacher').classList.add('visible');
-            const tips = ["กด Spacebar เพื่อรันคำสั่งกระโดดนะ!", "การเล่นเกมคือการรันลูป (Loop)", "การชนหินคือเงื่อนไข (If) อย่างหนึ่ง"];
+            const tips = ["กด Spacebar เพื่อรันคำสั่งกระโดดนะ!", "การเล่นเกมคือการรันลูป (Loop)", "เก็บกล่อง ? เพื่อทดสอบความรู้นะ!"];
             Robot.say(tips[Utils.randomInt(0, tips.length - 1)], 4000);
         }
     }, 8000);
