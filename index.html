@@ -1,205 +1,1016 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Type" content="text/html; charset=windows-874">
-<title>โรงเรียนบ้านบะแค : อำเภอแวงใหญ่ จังหวัดขอนแก่น</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>วิ่งตะลุยอวกาศ - Scratch Style Runner</title>
+    <style>
+        /* ==========================================================================
+           CSS VARIABLES & GLOBAL STYLES
+           ========================================================================== */
+        :root {
+            /* Scratch Inspired Palette */
+            --scratch-orange: #ff8c00;
+            --scratch-blue: #4cbfe6;
+            --scratch-purple: #9966ff;
+            --scratch-yellow: #ffbf00;
+            --scratch-green: #4c97ff;
+            --scratch-light-blue: #e6f0ff;
+            
+            /* UI Colors */
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --bg-glass: rgba(255, 255, 255, 0.85);
+            --border-glass: rgba(255, 255, 255, 0.4);
+            --shadow-soft: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            
+            /* Typography */
+            --font-main: 'Nunito', 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-<link href="img/favicon.png" rel="icon">
-<link href="img/apple-touch-icon.png" rel="apple-touch-icon">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sarabun">
-<link rel="stylesheet" href="css/bootstrap.min.css">
-<link rel="stylesheet" href="style.css">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* Prevent text selection during gameplay */
+        }
 
-<!-- Swiper -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.css"/>
+        body {
+            font-family: var(--font-main);
+            background-color: #f0f8ff;
+            color: var(--text-dark);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-<style>
-body {
-    font-family: "Sarabun", sans-serif;
-    font-size: 20;
-    margin: 0;
-    padding: 0;
-    filter: grayscale(100%);
-}
-.responsive-iframe {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
-}
-.responsive-iframe iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-</style>
+        /* ==========================================================================
+           GAME CONTAINER & CANVAS
+           ========================================================================== */
+        #app-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
 
-<style type="text/css">
-body {
-	margin-left: 0px;
-	margin-top: 0px;
-	margin-right: 0px;
-	margin-bottom: 0px;
-	background-color: rgb(198, 198, 198);
-	font-weight: normal;
-}
-.style17 {font-size: 16px;  color: #009; font-weight: bold;}
-.style18 {font-size: 14px;  color: #000; font-weight: bold;}
-.style26 {font-size: 12px;  color: #F00; font-weight: bold;}
-.style48 {font-size: 12px;  color: #000; font-weight: bold;}
-.style34 {font-size: 20px;  color: #000; font-weight: bold;}
+        #game-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 960px;
+            aspect-ratio: 16/9;
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border: 4px solid white;
+            margin-bottom: 20px;
+        }
 
-a:link { color: rgb(37, 35, 158); text-decoration: none; }
-a:hover { color: rgb(47, 178, 231); text-decoration: none; }
-a:visited { color: rgb(47, 178, 231); }
-</style>
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: optimizeQuality;
+        }
+
+        /* ==========================================================================
+           UI OVERLAYS
+           ========================================================================== */
+        .hud-panel {
+            position: absolute;
+            top: 15px;
+            display: flex;
+            gap: 15px;
+            z-index: 10;
+        }
+
+        .hud-left { left: 20px; }
+        .hud-right { right: 20px; }
+
+        .stat-box {
+            background: var(--bg-glass);
+            backdrop-filter: blur(8px);
+            border: 2px solid white;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-icon { font-size: 1.3rem; }
+
+        /* Hearts */
+        #lives-container { display: flex; gap: 5px; }
+        .heart {
+            color: #ff4d4d;
+            font-size: 1.5rem;
+            animation: pulse 1.5s infinite;
+        }
+        .heart.lost { color: #ccc; animation: none; opacity: 0.5; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Controls */
+        #mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: none;
+            justify-content: center;
+            padding: 0 20px;
+            z-index: 10;
+        }
+
+        .btn-jump {
+            background: linear-gradient(135deg, var(--scratch-orange), #ff6b00);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 8px 0 #cc5500, 0 15px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: manipulation;
+        }
+
+        .btn-jump:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 #cc5500, 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            #mobile-controls { display: flex; }
+            .stat-box { font-size: 0.9rem; padding: 5px 10px; }
+            .heart { font-size: 1.2rem; }
+        }
+
+        /* Menus */
+        .menu-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .menu-overlay.active { opacity: 1; pointer-events: all; }
+
+        .menu-card {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 5px solid var(--scratch-blue);
+            max-width: 90%;
+            width: 400px;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .menu-overlay.active .menu-card { transform: translateY(0); }
+
+        .menu-title {
+            font-size: 2.5rem;
+            color: var(--scratch-orange);
+            margin-bottom: 10px;
+            font-weight: 900;
+            text-shadow: 2px 2px 0px rgba(255, 140, 0, 0.2);
+        }
+
+        .menu-stats {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 1.2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .menu-stats div {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn-primary, .btn-secondary {
+            color: white; border: none; font-weight: bold; border-radius: 50px; cursor: pointer; transition: all 0.1s; width: 100%;
+        }
+        .btn-primary { background: var(--scratch-blue); padding: 15px 30px; font-size: 1.3rem; box-shadow: 0 6px 0 #319bc2; }
+        .btn-primary:active { transform: translateY(6px); box-shadow: 0 0 0 #319bc2; }
+        .btn-secondary { background: var(--scratch-purple); padding: 10px 20px; font-size: 1rem; box-shadow: 0 4px 0 #7a4ddb; margin-top: 15px; }
+        .btn-secondary:active { transform: translateY(4px); box-shadow: 0 0 0 #7a4ddb; }
+
+        .quiz-btn {
+            background: #f0f8ff; color: var(--scratch-blue);
+            border: 3px solid var(--scratch-blue); font-weight: bold;
+            padding: 12px 20px; font-size: 1.1rem; border-radius: 15px;
+            cursor: pointer; transition: all 0.2s; width: 100%; text-align: left;
+        }
+        .quiz-btn:hover { background: var(--scratch-blue); color: white; }
+        .quiz-btn:active { transform: scale(0.98); }
+
+        /* AI Robot Teacher */
+        #robot-teacher {
+            position: absolute;
+            bottom: 80px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            z-index: 15;
+            transition: transform 0.3s;
+            animation: floatRobot 3s ease-in-out infinite;
+            display: none;
+        }
+
+        #robot-teacher.visible { display: block; }
+
+        @keyframes floatRobot {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .speech-bubble {
+            position: absolute;
+            bottom: 90px;
+            right: 40px;
+            background: white;
+            border: 3px solid var(--scratch-blue);
+            border-radius: 15px;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: var(--text-dark);
+            white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .speech-bubble::after {
+            content: ''; position: absolute; bottom: -10px; right: 20px;
+            border-width: 10px 10px 0; border-style: solid; border-color: white transparent transparent transparent;
+        }
+        .speech-bubble::before {
+            content: ''; position: absolute; bottom: -14px; right: 18px;
+            border-width: 12px 12px 0; border-style: solid; border-color: var(--scratch-blue) transparent transparent transparent;
+        }
+        .speech-bubble.show { opacity: 1; transform: scale(1); }
+
+        /* Achievement Popup */
+        #achievement-popup {
+            position: absolute;
+            top: -100px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #ffdf00, #ffaa00);
+            color: white; padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border: 3px solid white; z-index: 30;
+            display: flex; align-items: center; gap: 10px;
+            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #achievement-popup.show { top: 30px; }
+
+        /* ==========================================================================
+           SCRATCH BLOCKS CSS (Used in Edu Section)
+           ========================================================================== */
+        .scratch-code-area {
+            background: #f9f9f9; padding: 20px; border-radius: 15px;
+            border: 2px dashed #ccc; font-family: 'Segoe UI', sans-serif;
+            font-weight: 600; font-size: 0.9rem;
+        }
+
+        .sb {
+            padding: 6px 12px; border-radius: 4px; color: white; margin-bottom: 4px;
+            display: inline-block; box-shadow: inset -2px -2px rgba(0,0,0,0.15); position: relative;
+        }
+        .sb-hat { background-color: #ffbf00; border-radius: 12px 12px 4px 4px; margin-bottom: 4px; }
+        .sb-hat::before {
+            content: ''; position: absolute; top: -6px; left: 15px;
+            width: 30px; height: 10px; background-color: #ffbf00; border-radius: 10px 10px 0 0;
+        }
+        .sb-control { background-color: #ffab19; }
+        .sb-motion { background-color: #4c97ff; }
+        .sb-sensing { background-color: #5cb1d6; }
+        .sb-sound { background-color: #cf63cf; }
+        .sb-data { background-color: #ff8c00; }
+        
+        .sb-wrap {
+            border-left: 15px solid #ffab19; padding-left: 10px; margin-bottom: 4px; border-radius: 0 0 0 4px;
+        }
+        .sb-arg {
+            background: rgba(0,0,0,0.15); padding: 2px 6px; border-radius: 10px;
+        }
+
+        /* Educational Section */
+        #educational-section {
+            width: 100%; max-width: 960px; margin-top: 20px;
+            display: grid; grid-template-columns: 1fr; gap: 20px;
+        }
+        @media (min-width: 768px) { #educational-section { grid-template-columns: 1fr 1fr; } }
+        .edu-card {
+            background: white; border-radius: 20px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-top: 6px solid var(--scratch-blue);
+        }
+        .edu-card:nth-child(2) { border-top-color: var(--scratch-orange); }
+        .edu-card:nth-child(3) { border-top-color: var(--scratch-purple); }
+        .edu-card:nth-child(4) { border-top-color: var(--scratch-yellow); }
+        .edu-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+        
+        .checklist { list-style: none; }
+        .checklist li { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 10px; }
+        .checklist li::before { content: '✅'; }
+        
+        .stats-table { width: 100%; border-collapse: collapse; }
+        .stats-table td { padding: 10px; border-bottom: 1px solid #eee; }
+        .stats-table td:last-child { font-weight: bold; text-align: right; color: var(--scratch-orange); }
+
+    </style>
 </head>
-
 <body>
-<table width="1140" border="0" align="center" cellpadding="0" cellspacing="0">
-  <tr>
-    <td background="bg_left.png"><img src="block.png" width="20" height="30"></td>
 
-    <td>
-      <table width="1000" border="0" align="center" cellpadding="0" cellspacing="0">
+<div id="app-container">
+    
+    <!-- MAIN GAME AREA -->
+    <div id="game-wrapper">
+        <!-- HUD -->
+        <div class="hud-panel hud-left">
+            <div class="stat-box">
+                <span class="stat-icon">⭐</span>
+                <span id="score-display">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-icon">🚩</span>
+                <span id="level-display">Level 1</span>
+            </div>
+        </div>
+        
+        <div class="hud-panel hud-right">
+            <div class="stat-box" id="lives-container">
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+            </div>
+        </div>
 
-        <!-- Header -->
-        <tr>
-          <td colspan="3">
-            <a href="index.html"><img src="banner/banner.png" width="1100" height="250"></a>
-          </td>
-        </tr>
+        <!-- Robot Teacher -->
+        <div id="robot-teacher">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <rect x="20" y="30" width="60" height="50" rx="10" fill="#e6e6e6" stroke="#4cbfe6" stroke-width="4"/>
+                <rect x="30" y="40" width="40" height="20" rx="5" fill="#333"/>
+                <circle cx="40" cy="50" r="5" fill="#4cbfe6" class="robot-eye"/>
+                <circle cx="60" cy="50" r="5" fill="#4cbfe6" class="robot-eye"/>
+                <line x1="50" y1="30" x2="50" y2="10" stroke="#4cbfe6" stroke-width="4"/>
+                <circle cx="50" cy="8" r="6" fill="#ff8c00">
+                    <animate attributeName="fill" values="#ff8c00;#ffeb3b;#ff8c00" dur="1s" repeatCount="indefinite" />
+                </circle>
+                <path d="M 20 50 Q 5 50 10 70" fill="none" stroke="#e6e6e6" stroke-width="6" stroke-linecap="round"/>
+                <path d="M 80 50 Q 95 50 90 70" fill="none" stroke="#e6e6e6" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+            <div class="speech-bubble" id="robot-speech">พร้อมเรียนรู้หรือยัง!</div>
+        </div>
 
-        <tr>
-          <!-- LEFT MENU -->
-          <td bgcolor="#FFFFFF" valign="top">
-            <table width="95%" cellpadding="0" cellspacing="0">
-              <tr><td><img src="button/H1.png" width="200" height="45"></td></tr>
-              <tr><td><a href="bbkdata.html"><img src="button/m1.png" width="200" height="40"></a></td></tr>
-              <tr><td><a href="data1.html"><img src="button/m2.png" width="200" height="40"></a></td></tr>
-              <tr><td><a href="person.html"><img src="button/m3.png" width="200" height="40"></a></td></tr>
-              <tr><td><a href="std.html"><img src="button/m4.png" width="200" height="40"></a></td></tr>
-              <tr><td><a href="lumin.html"><img src="button/m5.png" width="200" height="40"></a></td></tr>
-              <tr><td><a href="std1.html"><img src="button/m6.png" width="200" height="40"></a></td></tr>
-              <tr><td><img src="button/ict_07.png" width="200" height="10"></td></tr>
-              <tr><td>&nbsp;</td></tr>
+        <!-- Achievement Popup -->
+        <div id="achievement-popup">
+            <span id="ach-icon">🏆</span>
+            <div>
+                <div style="font-size: 0.8rem; opacity: 0.9;">ปลดล็อกความสำเร็จ!</div>
+                <div id="ach-text">นักวิ่งหน้าใหม่</div>
+            </div>
+        </div>
 
-              <!-- Internal Page -->
-              <tr><td>
-                <a href="https://script.google.com/macros/s/AKfycbzHbJCGO69gMaMow3IBjBBECIkxv1LX83MDUya66gF7mq6qn_aH4CcsFEfCUQqIdyjNbg/exec">
-                  <img src="button/D1.png" width="200" height="40">
-                </a>
-              </td></tr>
-              <tr><td><img src="button/ict_07.png" width="200" height="10"></td></tr>
-              <tr><td>&nbsp;</td></tr>
-            </table>
-          </td>
+        <!-- HTML5 Canvas -->
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
 
-          <!-- CENTER CONTENT -->
-          <td bgcolor="#FFFFFF" valign="top">
-            <table width="674" align="center" cellpadding="3" cellspacing="0">
-              <tr>
-                <td><marquee><span class="style34">-:- ยินดีต้อนรับเข้าสู่เว็บไซต์ โรงเรียนบ้านบะแค -:-</span></marquee></td>
-              </tr>
+        <!-- Mobile Controls -->
+        <div id="mobile-controls">
+            <button class="btn-jump" id="btn-mobile-jump">กระโดด (JUMP)</button>
+        </div>
 
-              <!-- SLIDER -->
-              <tr><td align="center">
-                <div class="swiper" style="width:100%; max-width:650px;">
-                  <div class="swiper-wrapper">
-                    <div class="swiper-slide"><img src="pic/1.jpg" style="width:100%;"></div>
-                    <div class="swiper-slide"><img src="pic/2.jpg" style="width:100%;"></div>
-                    <div class="swiper-slide"><img src="pic/3.jpg" style="width:100%;"></div>
-                    <div class="swiper-slide"><img src="pic/4.jpg" style="width:100%;"></div>
-                    <div class="swiper-slide"><img src="pic/5.jpg" style="width:100%;"></div>
-                    <div class="swiper-slide"><img src="pic/6.jpg" style="width:100%;"></div>
-                  </div>
-                  <div class="swiper-pagination"></div>
-                  <div class="swiper-button-prev"></div>
-                  <div class="swiper-button-next"></div>
+        <!-- Main Menu -->
+        <div class="menu-overlay active" id="main-menu">
+            <div class="menu-card">
+                <h1 class="menu-title">วิ่งตะลุยอวกาศ</h1>
+                <p style="margin-bottom: 20px; color: #666;">ฝึกการคิดเชิงคำนวณผ่านการเล่น</p>
+                <button class="btn-primary" id="btn-start">▶ เริ่มเกมและเรียนรู้!</button>
+                <button class="btn-secondary" id="btn-reset-data" style="margin-top: 10px; background: #ccc; box-shadow: 0 4px 0 #999;">ล้างข้อมูล</button>
+            </div>
+        </div>
+
+        <!-- Game Over Menu -->
+        <div class="menu-overlay" id="game-over-menu">
+            <div class="menu-card">
+                <h1 class="menu-title" style="color: #ff4d4d;">จบเกม!</h1>
+                <div class="menu-stats">
+                    <div>
+                        <div style="font-size: 0.9rem; color: #666;">คะแนนที่ได้</div>
+                        <strong style="font-size: 1.5rem; color: var(--scratch-orange);" id="go-score">0</strong>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: #666;">คะแนนสูงสุด</div>
+                        <strong style="font-size: 1.5rem; color: var(--scratch-blue);" id="go-highscore">0</strong>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: #666;">ระยะทาง</div>
+                        <strong style="font-size: 1.2rem; color: var(--scratch-purple);" id="go-distance">0m</strong>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: #666;">ดาวที่เก็บได้</div>
+                        <strong style="font-size: 1.2rem; color: var(--scratch-yellow);" id="go-stars">0</strong>
+                    </div>
                 </div>
-              </td></tr>
+                <button class="btn-primary" id="btn-restart">🔄 เล่นอีกครั้ง</button>
+            </div>
+        </div>
 
-              <tr><td>&nbsp;</td></tr>
+        <!-- Quiz Menu -->
+        <div class="menu-overlay" id="quiz-menu">
+            <div class="menu-card" style="width: 500px; border-color: var(--scratch-purple);">
+                <h2 class="menu-title" style="font-size: 1.8rem; color: var(--scratch-purple);">❓ กล่องคำถามโบนัส!</h2>
+                <p id="quiz-question" style="font-size: 1.2rem; margin: 15px 0; font-weight: bold; color: var(--text-dark);">คำถาม?</p>
+                <div id="quiz-choices" style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Choices injected here -->
+                </div>
+            </div>
+        </div>
 
-              <!-- NEWS AREA -->
-              <tr>
-                <td>
-                  <img src="button/mnews.png" width="674" height="40">
-                  <div class="responsive-iframe">
-                    <iframe src="https://script.google.com/a/macros/bakae.ac.th/s/AKfycbzqF6X06j9946JfRATLOAlEMGFjrOLmj4bkEFRA9mZsgJmRj4l0xuo2rfFFIY-lYLRchw/exec"></iframe>
-                  </div>
-                  <hr size="5" color="blue">
-                </td>
-              </tr>
+        <!-- Countdown Overlay -->
+        <div class="menu-overlay" id="countdown-overlay">
+            <h1 id="countdown-text" style="font-size: 6rem; color: white; font-weight: 900; text-shadow: 0 10px 20px rgba(0,0,0,0.5);">3</h1>
+        </div>
+    </div>
 
-              <!-- Facebook -->
-              <tr>
-                <td align="center">
-                  <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FBanbakae-School-673090246444569%2F&tabs=timeline&width=340&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true" width="500" height="500" frameborder="0"></iframe>
-                </td>
-              </tr>
+    <!-- EDUCATIONAL LEARNING PANEL -->
+    <div id="educational-section">
+        
+        <div class="edu-card">
+            <h2 class="edu-title">💡 สิ่งที่ได้เรียนรู้จากการเล่นเกมนี้</h2>
+            <ul class="checklist">
+                <li><strong>Event (เหตุการณ์):</strong> การกดปุ่ม Spacebar สั่งให้โค้ดทำงาน</li>
+                <li><strong>Condition (เงื่อนไข If):</strong> ตรวจสอบการชนสิ่งกีดขวาง หรือแตะโดนดาว</li>
+                <li><strong>Variable (ตัวแปร):</strong> การเก็บค่าคะแนน และพลังชีวิต (ลดลงเมื่อชนหิน)</li>
+                <li><strong>Loop (การวนซ้ำ):</strong> ฉากและตัวละครวิ่งต่อเนื่องด้วยลูป Forever</li>
+            </ul>
+        </div>
 
+        <div class="edu-card">
+            <h2 class="edu-title">🧩 ตัวอย่างโครงสร้างโค้ดเกม (Scratch)</h2>
+            <div class="scratch-code-area">
+                <div class="sb sb-hat">เมื่อคลิก 🚩</div>
+                <div class="sb sb-control">วนซ้ำตลอด (Forever)</div>
+                <div class="sb-wrap">
+                    <div class="sb sb-motion">เคลื่อนที่ฉากหลัง ⬅️</div>
+                    <div class="sb sb-control">ถ้า <span class="sb-arg">ชนหิน</span> แล้ว</div>
+                    <div class="sb-wrap" style="border-left-color: #5cb1d6;">
+                        <div class="sb sb-data" style="background:#ff4d4d">เปลี่ยน <span class="sb-arg">พลังชีวิต</span> ทีละ -1</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="edu-card">
+            <h2 class="edu-title">📊 สถิติการเรียนรู้ของคุณ</h2>
+            <table class="stats-table">
+                <tr><td>เล่นเกมไปแล้ว</td><td id="stat-games">0 ครั้ง</td></tr>
+                <tr><td>คะแนนสูงสุด</td><td id="stat-highscore">0</td></tr>
+                <tr><td>ระยะทางไกลสุด</td><td id="stat-distance">0 m</td></tr>
+                <tr><td>เก็บดาวรวม</td><td id="stat-totalstars">0 ดวง</td></tr>
             </table>
-          </td>
+        </div>
 
-          <!-- RIGHT MENU -->
-          <td bgcolor="#FFFFFF" valign="top">
-            <table width="100%" align="right" cellpadding="0" cellspacing="0">
-              <tr><td><img src="button/H4.png" width="200" height="44"></td></tr>
-              <tr><td><img src="button/ict_07.png" width="200" height="10"></td></tr>
+        <div class="edu-card">
+            <h2 class="edu-title">🏆 ถ้วยรางวัล (Achievements)</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px;" id="achievement-list"></div>
+        </div>
 
-              <tr><td align="center"><img src="img/B1.jpg" width="160" height="200"></td></tr>
-              <tr><td align="center" class="style17">นายฐณวัฒน์ ฉัตรวุฒิรัศมิ์</td></tr>
-              <tr><td align="center" class="style18">ผู้อำนวยการสถานศึกษา</td></tr>
+    </div>
 
-              <tr><td align="center"><img src="img/B2.jpg" width="160" height="200"></td></tr>
-              <tr><td align="center" class="style17">นางสาวสุรีย์ลักษณ์ สาระฤทธิ์</td></tr>
-              <tr><td align="center" class="style18">รองผู้อำนวยการสถานศึกษา</td></tr>
-
-              <tr><td align="center"><iframe width="200" height="113" src="https://www.youtube.com/embed/hIDxMBo9WxI"></iframe></td></tr>
-
-            </table>
-          </td>
-        </tr>
-
-        <tr>
-          <td colspan="3"><img src="img/footer.jpg" width="1100" height="110"></td>
-        </tr>
-
-      </table>
-    </td>
-
-    <td background="bg_right.png"><img src="block.png" width="20" height="30"></td>
-  </tr>
-</table>
-
-<!-- Bootstrap -->
-<script src="js/bootstrap.min.js"></script>
-
-<!-- Swiper JS -->
-<script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
+</div>
 
 <script>
-var swiper = new Swiper(".swiper", {
-  loop: true,
-  autoplay: {
-    delay: 2000,
-    disableOnInteraction: false,
-  },
-  pagination: {
-    el: ".swiper-pagination",
-    clickable: true,
-  },
-  navigation: {
-    nextEl: ".swiper-button-next",
-    prevEl: ".swiper-button-prev",
-  },
-});
-</script>
+/**
+ * SCRATCH-STYLE EDUCATIONAL PLATFORM RUNNER
+ * Fix: Standardized `.w` and `.h` on collision helper to ensure correct detection
+ */
 
+const CONFIG = {
+    canvasWidth: 960, canvasHeight: 540,
+    gravity: 0.6, jumpForce: -14, baseSpeed: 6, speedIncreasePerLevel: 0.5,
+    pointsPerStar: 10, framesPerAnim: 5,
+    colors: {
+        skyTop: '#87CEEB', skyBottom: '#E0F6FF', groundTop: '#7CFC00',
+        groundMid: '#8B4513', groundBottom: '#5C3317', playerMain: '#ff8c00',
+        playerSec: '#ffffff', rock: '#808080', box: '#CD853F', star: '#FFD700'
+    }
+};
+
+const QUIZ_QUESTIONS = [
+    { q: "ถ้าต้องการให้ตัวละครวิ่งซ้ำๆ ตลอดไป ต้องใช้บล็อกคำสั่งใด?", choices: ["วนซ้ำตลอด (Forever)", "ถ้า...แล้ว (If...then)", "ทำซ้ำ 10 ครั้ง (Repeat 10)"], correct: 0 },
+    { q: "เมื่อตัวละครชนสิ่งกีดขวาง เราควรใช้บล็อกใดเพื่อตรวจสอบว่าชนหรือไม่?", choices: ["รอ 1 วินาที (Wait)", "ถ้า...แล้ว (If...then)", "เล่นเสียง (Play sound)"], correct: 1 },
+    { q: "การเก็บค่า 'คะแนน' ในเกม ต้องใช้ความรู้เรื่องใดในเขียนโปรแกรม?", choices: ["รูปร่าง (Looks)", "ตัวแปร (Variables)", "เสียง (Sound)"], correct: 1 },
+    { q: "บล็อกคำสั่งใด มักจะอยู่บนสุดของการเขียนโค้ดเสมอ?", choices: ["เปลี่ยน X ทีละ 10", "ซ่อน (Hide)", "เมื่อคลิก 🚩 (When 🚩 clicked)"], correct: 2 },
+    { q: "ถ้าเรากระโดดเก็บดาวได้ เราควรทำอย่างไรกับตัวแปรคะแนน?", choices: ["ตั้งค่าคะแนนเป็น 0", "เปลี่ยนคะแนน ทีละ 10", "ลบตัวแปรทิ้ง"], correct: 1 }
+];
+
+// --- AUDIO SYSTEM ---
+class AudioEngine {
+    constructor() { this.ctx = null; this.enabled = false; this.masterVolume = 0.3; }
+    init() {
+        if (!this.ctx) { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.enabled = true; }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+    }
+    playTone(freq1, freq2, type, duration, vol = 1) {
+        if (!this.enabled || !this.ctx) return;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = type; osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.frequency.setValueAtTime(freq1, this.ctx.currentTime);
+        if (freq2) osc.frequency.exponentialRampToValueAtTime(freq2, this.ctx.currentTime + duration);
+        gain.gain.setValueAtTime(this.masterVolume * vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.start(); osc.stop(this.ctx.currentTime + duration);
+    }
+    playJump() { this.playTone(300, 600, 'sine', 0.2, 0.5); }
+    playCoin() { this.playTone(900, 1200, 'square', 0.1, 0.3); }
+    playHit() { this.playTone(150, 50, 'sawtooth', 0.3, 0.6); }
+    playLevelUp() {
+        this.playTone(400, 600, 'square', 0.1, 0.4);
+        setTimeout(() => this.playTone(600, 800, 'square', 0.2, 0.4), 100);
+        setTimeout(() => this.playTone(800, 1200, 'square', 0.3, 0.4), 200);
+    }
+    playGameOver() {
+        this.playTone(300, 100, 'sawtooth', 0.5, 0.5);
+        setTimeout(() => this.playTone(200, 50, 'sawtooth', 0.8, 0.5), 400);
+    }
+}
+const audio = new AudioEngine();
+
+// --- UTILITIES & STORAGE ---
+const Utils = {
+    random: (min, max) => Math.random() * (max - min) + min,
+    randomInt: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min,
+    checkCollision: (r1, r2) => {
+        const pX = 10, pY = 10;
+        // FIXED: Using .w and .h instead of .width and .height to match class declarations
+        return (r1.x < r2.x + r2.w - pX && r1.x + r1.w - pX > r2.x &&
+                r1.y < r2.y + r2.h - pY && r1.y + r1.h - pY > r2.y);
+    }
+};
+
+class SaveData {
+    constructor() {
+        this.key = 'scratch_runner_data';
+        this.data = this.load();
+        this.achievements = [
+            { id: 'first_play', name: 'เริ่มเขียนโค้ด', desc: 'เล่นเกมครั้งแรก', req: (d) => d.gamesPlayed >= 1, icon: '🥉' },
+            { id: 'score_100', name: 'ลูปเซียน (Loop Master)', desc: 'ทำคะแนนถึง 100', req: (d) => d.highScore >= 100, icon: '🥈' },
+            { id: 'star_100', name: 'นักสะสมตัวแปร', desc: 'เก็บดาวครบ 100 ดวง', req: (d) => d.totalStars >= 100, icon: '🌟' }
+        ];
+    }
+    load() {
+        const saved = localStorage.getItem(this.key);
+        return saved ? JSON.parse(saved) : { highScore: 0, maxDistance: 0, totalStars: 0, gamesPlayed: 0, maxLevel: 1, unlockedAch: [] };
+    }
+    save() { localStorage.setItem(this.key, JSON.stringify(this.data)); this.updateUI(); }
+    checkAchievements() {
+        let newAch = false;
+        this.achievements.forEach(ach => {
+            if (!this.data.unlockedAch.includes(ach.id) && ach.req(this.data)) {
+                this.data.unlockedAch.push(ach.id); UI.showAchievement(ach); newAch = true;
+            }
+        });
+        if (newAch) this.save();
+    }
+    updateUI() {
+        document.getElementById('stat-games').innerText = `${this.data.gamesPlayed} ครั้ง`;
+        document.getElementById('stat-highscore').innerText = this.data.highScore;
+        document.getElementById('stat-distance').innerText = `${Math.floor(this.data.maxDistance)} m`;
+        document.getElementById('stat-totalstars').innerText = `${this.data.totalStars} ดวง`;
+        const achContainer = document.getElementById('achievement-list');
+        achContainer.innerHTML = '';
+        this.achievements.forEach(ach => {
+            const isUnl = this.data.unlockedAch.includes(ach.id);
+            achContainer.innerHTML += `<div style="padding:10px 15px; background:${isUnl?'#e6f7ff':'#f5f5f5'}; border:2px solid ${isUnl?'#4cbfe6':'#ddd'}; border-radius:10px; opacity:${isUnl?'1':'0.5'}; display:flex; align-items:center; gap:10px;">
+                <span style="font-size:1.5rem">${ach.icon}</span><div><strong>${ach.name}</strong><br><small>${ach.desc}</small></div></div>`;
+        });
+    }
+    reset() { localStorage.removeItem(this.key); this.data = this.load(); this.save(); }
+}
+const storage = new SaveData();
+
+// --- GAME ENTITIES ---
+class Background {
+    constructor(w, h) {
+        this.w = w; this.h = h;
+        this.layers = [{ s: 0.2, p: 0, r: this.drawM.bind(this) }, { s: 0.5, p: 0, r: this.drawT.bind(this) }, { s: 1.0, p: 0, r: this.drawG.bind(this) }];
+        this.clouds = Array.from({length: 5}, () => ({ x: Utils.random(0, w), y: Utils.random(20, 150), scale: Utils.random(0.5, 1.2), speed: Utils.random(0.1, 0.3) }));
+    }
+    update(baseSpeed) {
+        this.layers.forEach(l => { l.p -= baseSpeed * l.s; if (l.p <= -this.w) l.p = 0; });
+        this.clouds.forEach(c => { c.x -= baseSpeed * c.speed * 0.5; if (c.x < -150) { c.x = this.w + 50; c.y = Utils.random(20, 150); } });
+    }
+    draw(ctx) {
+        ctx.fillStyle = CONFIG.colors.skyTop; ctx.fillRect(0, 0, this.w, this.h);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        this.clouds.forEach(c => {
+            ctx.beginPath(); ctx.arc(c.x, c.y, 30*c.scale, Math.PI*0.5, Math.PI*1.5);
+            ctx.arc(c.x + 25*c.scale, c.y - 15*c.scale, 35*c.scale, Math.PI, Math.PI*2);
+            ctx.arc(c.x + 60*c.scale, c.y - 5*c.scale, 25*c.scale, Math.PI, Math.PI*2);
+            ctx.arc(c.x + 80*c.scale, c.y, 25*c.scale, Math.PI*1.5, Math.PI*0.5); ctx.fill();
+        });
+        this.layers.forEach(l => { ctx.save(); ctx.translate(l.p, 0); l.r(ctx); ctx.translate(this.w, 0); l.r(ctx); ctx.restore(); });
+    }
+    drawM(ctx) {
+        ctx.fillStyle = '#a0c8d7'; ctx.beginPath(); ctx.moveTo(0, this.h - 50); ctx.lineTo(200, this.h - 250);
+        ctx.lineTo(400, this.h - 50); ctx.lineTo(600, this.h - 300); ctx.lineTo(800, this.h - 100);
+        ctx.lineTo(this.w, this.h - 200); ctx.lineTo(this.w, this.h); ctx.lineTo(0, this.h); ctx.fill();
+    }
+    drawT(ctx) {
+        for(let i = 0; i < this.w; i += 200) {
+            ctx.fillStyle = '#8B4513'; ctx.fillRect(i + 80, this.h - 120, 20, 70);
+            ctx.fillStyle = '#2E8B57'; ctx.beginPath(); ctx.arc(i + 90, this.h - 130, 40, 0, Math.PI*2);
+            ctx.arc(i + 70, this.h - 110, 30, 0, Math.PI*2); ctx.arc(i + 110, this.h - 110, 30, 0, Math.PI*2); ctx.fill();
+        }
+    }
+    drawG(ctx) {
+        const gY = this.h - 60;
+        ctx.fillStyle = CONFIG.colors.groundMid; ctx.fillRect(0, gY, this.w, 60);
+        ctx.fillStyle = CONFIG.colors.groundTop; ctx.fillRect(0, gY, this.w, 15);
+        ctx.fillStyle = CONFIG.colors.groundBottom;
+        for(let i=0; i<this.w; i+=40) { ctx.fillRect(i, gY + 25, 15, 10); ctx.fillRect(i+20, gY + 45, 10, 8); }
+    }
+}
+
+class Player {
+    constructor(gameHeight) {
+        this.w = 60; this.h = 70; this.x = 100;
+        this.groundY = gameHeight - 60 - this.h; this.y = this.groundY;
+        this.vy = 0; this.isJumping = false; this.frame = 0; this.tick = 0;
+        this.isHit = false; this.hitTimer = 0;
+    }
+    jump() {
+        if (!this.isJumping) {
+            this.vy = CONFIG.jumpForce; this.isJumping = true;
+            audio.playJump(); game.spawnParticles(this.x + this.w/2, this.y + this.h, '#ccc', 10);
+        }
+    }
+    update() {
+        this.vy += CONFIG.gravity; this.y += this.vy;
+        if (this.y > this.groundY) {
+            this.y = this.groundY; this.vy = 0;
+            if (this.isJumping) { this.isJumping = false; game.spawnParticles(this.x + this.w/2, this.y + this.h, '#ccc', 5); }
+        }
+        if (this.isHit) { this.hitTimer--; if (this.hitTimer <= 0) this.isHit = false; }
+        this.tick++;
+        if (this.tick > CONFIG.framesPerAnim) {
+            this.tick = 0; this.frame = this.isJumping ? 0 : (this.frame + 1) % 4;
+        }
+    }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x, this.y);
+        if (this.isHit && Math.floor(this.hitTimer / 5) % 2 === 0) ctx.globalAlpha = 0.5;
+        ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(this.w/2, this.h, this.w/2.5, 8, 0, 0, Math.PI*2); ctx.fill();
+        let bobY = (!this.isJumping && this.frame % 2 !== 0) ? -5 : 0;
+        ctx.fillStyle = CONFIG.colors.playerMain; ctx.beginPath(); ctx.roundRect(5, 10 + bobY, 50, 50, 15); ctx.fill();
+        ctx.fillStyle = CONFIG.colors.playerSec; ctx.beginPath(); ctx.roundRect(15, 30 + bobY, 30, 25, 10); ctx.fill();
+        ctx.fillStyle = '#333'; ctx.beginPath(); ctx.arc(40, 25 + bobY, 4, 0, Math.PI*2); ctx.arc(20, 25 + bobY, 3, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(41, 24 + bobY, 1.5, 0, Math.PI*2); ctx.arc(21, 24 + bobY, 1, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#cc5500';
+        if (this.isJumping) { ctx.fillRect(15, 60 + bobY, 10, 5); ctx.fillRect(35, 60 + bobY, 10, 5); }
+        else {
+            if (this.frame === 0 || this.frame === 2) { ctx.fillRect(20, 60 + bobY, 8, 10); ctx.fillRect(35, 60 + bobY, 8, 10); }
+            else if (this.frame === 1) { ctx.fillRect(15, 60 + bobY, 8, 8); ctx.fillRect(40, 60 + bobY, 8, 10); }
+            else { ctx.fillRect(25, 60 + bobY, 8, 10); ctx.fillRect(30, 60 + bobY, 8, 8); }
+        }
+        ctx.restore();
+    }
+    hit() {
+        if (this.isHit) return false;
+        this.isHit = true; this.hitTimer = 60; audio.playHit();
+        game.spawnParticles(this.x + this.w/2, this.y + this.h/2, '#ff0000', 20);
+        return true;
+    }
+}
+
+class Obstacle {
+    constructor(x, y, type) {
+        this.x = x; this.type = type; this.passed = false;
+        this.w = type === 'rock' ? 40 : 50; this.h = type === 'rock' ? 40 : 50;
+        this.y = y - this.h;
+    }
+    update(speed) { this.x -= speed; }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x, this.y);
+        if (this.type === 'rock') {
+            ctx.fillStyle = CONFIG.colors.rock; ctx.beginPath(); ctx.moveTo(0, this.h); ctx.lineTo(10, 10); ctx.lineTo(25, 0); ctx.lineTo(this.w, this.h); ctx.fill();
+            ctx.fillStyle = '#a0a0a0'; ctx.beginPath(); ctx.moveTo(10, this.h); ctx.lineTo(15, 15); ctx.lineTo(25, 5); ctx.fill();
+        } else {
+            ctx.fillStyle = CONFIG.colors.box; ctx.fillRect(0, 0, this.w, this.h);
+            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 2; ctx.strokeRect(0, 0, this.w, this.h);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(this.w, this.h); ctx.moveTo(this.w, 0); ctx.lineTo(0, this.h); ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
+class Item {
+    constructor(x, y, type) { this.x = x; this.y = y; this.w = 30; this.h = 30; this.type = type; this.bob = 0; this.tick = Utils.random(0, 100); }
+    update(speed) { this.x -= speed; this.tick += 0.1; this.bob = Math.sin(this.tick) * 5; }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x + this.w/2, this.y + this.h/2 + this.bob);
+        if (this.type === 'star') {
+            ctx.fillStyle = CONFIG.colors.star; ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(Math.cos((18 + i * 72) / 180 * Math.PI) * 15, -Math.sin((18 + i * 72) / 180 * Math.PI) * 15);
+                ctx.lineTo(Math.cos((54 + i * 72) / 180 * Math.PI) * 7, -Math.sin((54 + i * 72) / 180 * Math.PI) * 7);
+            }
+            ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#DAA520'; ctx.stroke();
+        } else if (this.type === 'bonus') {
+            ctx.fillStyle = '#9966ff'; ctx.fillRect(-15, -15, 30, 30);
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2; ctx.strokeRect(-15, -15, 30, 30);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 24px Arial, sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('?', 0, 2);
+        }
+        ctx.restore();
+    }
+}
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x; this.y = y; this.color = color; this.size = Utils.random(2, 6);
+        this.vx = Utils.random(-3, 3); this.vy = Utils.random(-3, -1);
+        this.life = 1.0; this.decay = Utils.random(0.02, 0.05);
+    }
+    update() { this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life -= this.decay; }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life); ctx.fillStyle = this.color;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); ctx.globalAlpha = 1.0;
+    }
+}
+
+// --- MAIN GAME ---
+class Game {
+    constructor() {
+        this.canvas = document.getElementById('gameCanvas'); this.ctx = this.canvas.getContext('2d');
+        this.width = CONFIG.canvasWidth; this.height = CONFIG.canvasHeight;
+        this.state = 'MENU';
+        this.bg = new Background(this.width, this.height);
+        this.player = new Player(this.height);
+        this.obstacles = []; this.items = []; this.particles = [];
+        this.spawnTimer = 0; this.lastTime = 0; this.animationId = null;
+        this.setupInputs();
+    }
+    setupInputs() {
+        const jumpAction = (e) => {
+            if (e) { e.preventDefault(); e.stopPropagation(); }
+            audio.init();
+            if (this.state === 'PLAYING') this.player.jump();
+        };
+        window.addEventListener('keydown', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') jumpAction(e); });
+        this.canvas.addEventListener('touchstart', jumpAction, {passive: false});
+        this.canvas.addEventListener('mousedown', jumpAction);
+        document.getElementById('btn-mobile-jump').addEventListener('touchstart', jumpAction, {passive: false});
+        document.getElementById('btn-mobile-jump').addEventListener('mousedown', jumpAction);
+    }
+    start() {
+        this.state = 'PLAYING'; this.score = 0; this.distance = 0; this.starsCollected = 0;
+        this.lives = 3; this.level = 1; this.speed = CONFIG.baseSpeed;
+        this.player = new Player(this.height); this.obstacles = []; this.items = []; this.particles = []; this.spawnTimer = 0;
+        UI.updateHUD(); UI.hideMenus();
+        Robot.say("ลุยเลย! ระวังสิ่งกีดขวางนะ", 4000);
+        storage.data.gamesPlayed++; storage.save(); storage.checkAchievements();
+        if (this.animationId) cancelAnimationFrame(this.animationId);
+        this.lastTime = performance.now(); this.loop(this.lastTime);
+    }
+    gameOver() {
+        this.state = 'GAMEOVER'; audio.playGameOver();
+        Robot.say("ไม่เป็นไร! ลองพยายามดูใหม่นะ");
+        if (this.score > storage.data.highScore) storage.data.highScore = Math.floor(this.score);
+        if (this.distance > storage.data.maxDistance) storage.data.maxDistance = this.distance;
+        if (this.level > storage.data.maxLevel) storage.data.maxLevel = this.level;
+        storage.data.totalStars += this.starsCollected;
+        storage.save(); storage.checkAchievements();
+        UI.showGameOver(Math.floor(this.score), storage.data.highScore, Math.floor(this.distance), this.starsCollected);
+    }
+    startQuiz() {
+        this.state = 'QUIZ';
+        const q = QUIZ_QUESTIONS[Utils.randomInt(0, QUIZ_QUESTIONS.length - 1)];
+        UI.showQuiz(q, (isCorrect) => {
+            if (isCorrect) {
+                audio.playLevelUp(); this.score += 50;
+                Robot.say("เก่งมาก! ตอบถูกรับ 50 คะแนน", 3000);
+                this.spawnParticles(this.player.x + 30, this.player.y, '#FFD700', 30);
+            } else {
+                audio.playHit();
+                Robot.say("เสียดายจัง! ไม่ได้คะแนนโบนัส", 3000);
+            }
+            UI.updateHUD();
+            this.resumeGame();
+        });
+    }
+    resumeGame() {
+        this.state = 'COUNTDOWN';
+        UI.showCountdown(() => {
+            this.state = 'PLAYING';
+            this.lastTime = performance.now();
+            this.loop(this.lastTime);
+        });
+    }
+    spawnEntities() {
+        this.spawnTimer++; const spawnInterval = Math.max(60, 120 - (this.level * 5));
+        if (this.spawnTimer > spawnInterval) {
+            this.spawnTimer = 0; const sX = this.width + 50; const gY = this.height - 60;
+            if (Math.random() < 0.7) {
+                this.obstacles.push(new Obstacle(sX, gY, Math.random() > 0.5 ? 'rock' : 'box'));
+            } else {
+                const rand = Math.random();
+                if (rand < 0.2) this.items.push(new Item(sX, gY - 60, 'bonus'));
+                else if (rand < 0.5) this.items.push(new Item(sX, gY - 60, 'star'));
+                else {
+                    [0, 60, 120, 180].forEach((ox, i) => this.items.push(new Item(sX + ox, gY - (i===1||i===2 ? 120 : 60), 'star')));
+                }
+            }
+        }
+    }
+    spawnParticles(x, y, color, count) { for(let i=0; i<count; i++) this.particles.push(new Particle(x, y, color)); }
+    checkCollisions() {
+        // Obstacles
+        for (let i = 0; i < this.obstacles.length; i++) {
+            const obs = this.obstacles[i];
+            if (Utils.checkCollision(this.player, obs)) {
+                if (this.player.hit()) {
+                    this.lives--; UI.updateLives(this.lives);
+                    if (this.lives <= 0) { this.gameOver(); return; }
+                }
+            } else if (!obs.passed && obs.x + obs.w < this.player.x) { // FIXED: Changed obs.width to obs.w
+                obs.passed = true; this.score += 5;
+            }
+        }
+        // Items
+        for (let i = this.items.length - 1; i >= 0; i--) {
+            const item = this.items[i];
+            if (Utils.checkCollision(this.player, item)) {
+                if (item.type === 'star') {
+                    audio.playCoin(); this.spawnParticles(item.x + 15, item.y + 15, CONFIG.colors.star, 10);
+                    this.score += CONFIG.pointsPerStar; this.starsCollected++; this.items.splice(i, 1);
+
+                    if (this.starsCollected % 5 === 0) Robot.say(["เยี่ยมยอด!", "ทำได้ดีมาก!", "คะแนนพุ่งเลย!"][Utils.randomInt(0,2)]);
+                } else if (item.type === 'bonus') {
+                    audio.playCoin();
+                    this.items.splice(i, 1);
+                    this.startQuiz();
+                }
+            }
+        }
+    }
+    update(dt) {
+        if (this.state !== 'PLAYING') return;
+        this.distance += this.speed * 0.05; this.score += this.speed * 0.01;
+        if (this.score > this.level * 200) {
+            this.level++; this.speed += CONFIG.speedIncreasePerLevel; audio.playLevelUp();
+            Robot.say(`เลเวลอัป! เพิ่มความเร็วตัวแปรลูป!`);
+            this.spawnParticles(this.player.x, this.player.y, '#00ff00', 30); UI.updateHUD();
+        }
+        this.bg.update(this.speed); this.player.update(); this.spawnEntities();
+        this.obstacles.forEach(o => o.update(this.speed)); this.obstacles = this.obstacles.filter(o => o.x + o.w > -100);
+        this.items.forEach(i => i.update(this.speed)); this.items = this.items.filter(i => i.x + i.w > -100);
+        this.particles.forEach(p => p.update()); this.particles = this.particles.filter(p => p.life > 0);
+        this.checkCollisions();
+        if (Math.floor(this.score) % 5 === 0) UI.updateHUD();
+    }
+    draw() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.bg.draw(this.ctx); this.items.forEach(i => i.draw(this.ctx));
+        this.obstacles.forEach(o => o.draw(this.ctx)); this.player.draw(this.ctx);
+        this.particles.forEach(p => p.draw(this.ctx));
+    }
+    loop(timestamp) {
+        const dt = timestamp - this.lastTime; this.lastTime = timestamp;
+        this.update(dt); this.draw();
+        if (this.state === 'PLAYING') this.animationId = requestAnimationFrame((ts) => this.loop(ts));
+    }
+}
+
+// --- UI MANAGER ---
+const UI = {
+    updateHUD: () => {
+        document.getElementById('score-display').innerText = Math.floor(game.score);
+        document.getElementById('level-display').innerText = `Level ${game.level}`;
+    },
+    updateLives: (lives) => {
+        document.querySelectorAll('.heart').forEach((h, i) => h.classList.toggle('lost', i >= lives));
+    },
+    hideMenus: () => {
+        document.getElementById('main-menu').classList.remove('active');
+        document.getElementById('game-over-menu').classList.remove('active');
+        document.getElementById('robot-teacher').classList.add('visible');
+    },
+    showGameOver: (score, highscore, dist, stars) => {
+        document.getElementById('go-score').innerText = score; document.getElementById('go-highscore').innerText = highscore;
+        document.getElementById('go-distance').innerText = `${dist}m`; document.getElementById('go-stars').innerText = stars;
+        document.getElementById('game-over-menu').classList.add('active');
+    },
+    showAchievement: (ach) => {
+        const p = document.getElementById('achievement-popup');
+        document.getElementById('ach-icon').innerText = ach.icon; document.getElementById('ach-text').innerText = ach.name;
+        p.classList.add('show'); audio.playTone(600, 1200, 'square', 0.5, 0.6);
+        setTimeout(() => p.classList.remove('show'), 4000);
+    },
+    showQuiz: (quizObj, callback) => {
+        document.getElementById('quiz-question').innerText = quizObj.q;
+        const choicesContainer = document.getElementById('quiz-choices');
+        choicesContainer.innerHTML = '';
+        quizObj.choices.forEach((choiceText, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'quiz-btn';
+            btn.innerText = choiceText;
+            btn.onclick = () => {
+                document.getElementById('quiz-menu').classList.remove('active');
+                callback(index === quizObj.correct);
+            };
+            choicesContainer.appendChild(btn);
+        });
+        document.getElementById('quiz-menu').classList.add('active');
+    },
+    showCountdown: (callback) => {
+        const overlay = document.getElementById('countdown-overlay');
+        const text = document.getElementById('countdown-text');
+        overlay.classList.add('active');
+        let count = 3;
+        text.innerText = count;
+        const intv = setInterval(() => {
+            count--;
+            if(count > 0) {
+                text.innerText = count;
+            } else if(count === 0) {
+                text.innerText = 'ลุย!';
+            } else {
+                clearInterval(intv);
+                overlay.classList.remove('active');
+                callback();
+            }
+        }, 800);
+    }
+};
+
+const Robot = {
+    element: document.getElementById('robot-speech'), timer: null,
+    say: (text, duration = 3000) => {
+        if (!text) return; Robot.element.innerText = text; Robot.element.classList.add('show');
+        if (Robot.timer) clearTimeout(Robot.timer);
+        Robot.timer = setTimeout(() => Robot.element.classList.remove('show'), duration);
+    }
+};
+
+// --- INIT ---
+let game;
+window.onload = () => {
+    game = new Game(); game.draw(); storage.updateUI();
+    document.getElementById('btn-start').addEventListener('click', () => game.start());
+    document.getElementById('btn-restart').addEventListener('click', () => game.start());
+    document.getElementById('btn-reset-data').addEventListener('click', () => {
+        if(confirm('ล้างข้อมูลสถิติทั้งหมด?')) { storage.reset(); alert('สำเร็จ!'); }
+    });
+    
+    // Menu Robot Tips
+    setInterval(() => {
+        if (game.state === 'MENU') {
+            document.getElementById('robot-teacher').classList.add('visible');
+            const tips = ["กด Spacebar เพื่อรันคำสั่งกระโดดนะ!", "การเล่นเกมคือการรันลูป (Loop)", "การชนหินคือเงื่อนไข (If) อย่างหนึ่ง"];
+            Robot.say(tips[Utils.randomInt(0, tips.length - 1)], 4000);
+        }
+    }, 8000);
+};
+
+</script>
 </body>
 </html>
